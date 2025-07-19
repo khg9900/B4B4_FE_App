@@ -23,24 +23,22 @@ object BackendApi {
                 .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
             val request = Request.Builder()
-
-                .url("http://192.168.0.22:8080/api/location/region") // 환경에 맞게 변경
-
+                .url("http://192.168.25.177:8080/api/location/region") // 서버 주소에 맞게 변경하세요
                 .addHeader("Authorization", "Bearer $jwtToken")
                 .post(requestBody)
                 .build()
 
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    Log.d(TAG, "✅ 위치 전송 성공: ${response.code}")
+                    Log.d(TAG, "✅ 위치 지역 전송 성공: ${response.code}")
                     true
                 } else {
-                    Log.w(TAG, "⚠️ 위치 전송 실패: ${response.code} ${response.message}")
+                    Log.w(TAG, "⚠️ 위치 지역 전송 실패: ${response.code} ${response.message}")
                     false
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ 위치 전송 중 예외 발생", e)
+            Log.e(TAG, "❌ 위치 지역 전송 중 예외 발생", e)
             false
         }
     }
