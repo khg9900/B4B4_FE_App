@@ -17,7 +17,7 @@ import { setJwtToken } from '../../../nativeModules/JwtModule';
 import { requestPushPermission } from '../../alert/fcm/fcmPermissions';
 import { getFcmToken } from '../../alert/fcm/fcmTokenManager';
 import { sendDeviceInfoToServer } from '../../alert/fcm/sendDeviceInfo';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode'; // 수정: named import로 변경
 import { WebView } from 'react-native-webview';
 import { startLocationSenderService } from '../../location/hooks/startLocationService';
 
@@ -46,6 +46,7 @@ const LoginScreen = () => {
         if (savedToken) {
           setJwtToken(savedToken);
           startLocationSenderService();
+
           const permissionGranted = await requestPushPermission();
           if (permissionGranted) {
             const token = await getFcmToken();
@@ -58,7 +59,7 @@ const LoginScreen = () => {
       }
     };
     tryAutoLogin();
-  }, []);
+  }, [navigation]);
 
   const handleLogin = async () => {
     try {
@@ -76,6 +77,7 @@ const LoginScreen = () => {
       ]);
 
       setJwtToken(accessToken);
+
       const decoded: DecodedToken = jwtDecode(accessToken);
       const role = decoded.role;
 
@@ -88,7 +90,8 @@ const LoginScreen = () => {
         }
       }
 
-      startLocationSenderService();
+      startLocationSenderService(); // 위치 전송 서비스 시작
+
       Alert.alert('로그인 성공');
 
       if (role === 'IND') navigation.navigate('ReportScreen' as never);
@@ -100,12 +103,10 @@ const LoginScreen = () => {
     }
   };
 
-  // ✅ WebView 열기
   const handleKakaoLogin = () => {
     setShowWebView(true);
   };
 
-  // ✅ WebView 내 URL 변경 감지하여 토큰 추출
   const handleWebViewNavigation = async (navState: any) => {
     const { url } = navState;
 
@@ -130,7 +131,8 @@ const LoginScreen = () => {
           if (token) await sendDeviceInfoToServer(token);
         }
 
-        startLocationSenderService();
+        startLocationSenderService(); // 위치 전송 서비스 시작
+
         setShowWebView(false);
         Alert.alert('카카오 로그인 성공');
 
@@ -149,6 +151,7 @@ const LoginScreen = () => {
         style={styles.input}
         value={form.email}
         onChangeText={text => setForm({ ...form, email: text })}
+        autoCapitalize="none"
       />
       <TextInput
         placeholder="비밀번호"
@@ -156,6 +159,7 @@ const LoginScreen = () => {
         secureTextEntry
         value={form.password}
         onChangeText={text => setForm({ ...form, password: text })}
+        autoCapitalize="none"
       />
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>로그인</Text>
@@ -168,7 +172,7 @@ const LoginScreen = () => {
         <Text style={styles.signUpText}>회원가입</Text>
       </TouchableOpacity>
 
-      {/* ✅ WebView 모달 */}
+      {/* 카카오 로그인 WebView 모달 */}
       <Modal visible={showWebView} animationType="slide">
         <WebView
           source={{ uri: 'http://10.0.2.2:8080/api/auth/kakao' }}
@@ -202,18 +206,6 @@ const styles = StyleSheet.create({
   loginButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   signUpLink: { marginTop: 10, alignItems: 'center' },
   signUpText: { color: '#f26522', fontWeight: '600' },
-  socialContainer: { marginTop: 10, alignItems: 'center' },
-  kakaoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  kakaoIcon: {
-    marginLeft: '2%',
-    width: '100%',
-    height: 70,
-    marginRight: 8,
-    resizeMode: 'contain',
-  },
 });
 
 export default LoginScreen;
