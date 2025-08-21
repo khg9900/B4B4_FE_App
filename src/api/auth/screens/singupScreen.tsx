@@ -20,9 +20,7 @@ const SignUpScreen = () => {
     password: '',
     name: '',
     phoneNumber: '',
-    province: '',
     userRole: 'IND',
-    loginType: 'LOCAL', // 기본값
   });
 
   const handleSubmit = async () => {

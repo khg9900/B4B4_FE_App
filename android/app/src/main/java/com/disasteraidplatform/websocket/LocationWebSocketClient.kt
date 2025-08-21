@@ -1,102 +1,100 @@
 package com.disasteraidplatform.websocket
 
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
+import com.disasteraidplatform.util.Logger
+import kotlinx.serialization.json.*
 import okhttp3.*
-import java.util.concurrent.TimeUnit
 
-class LocationWebSocketClient(private var socketUrl: String) {
+class LocationWebSocketClient(private val url: String) {
+
     private var webSocket: WebSocket? = null
-    private val client = OkHttpClient.Builder()
-        .readTimeout(0, TimeUnit.MILLISECONDS)
-        .build()
+    private val client = OkHttpClient()
+    private var reconnectHandler: Runnable? = null
 
-    private var isConnected = false
-    private var reconnectAttempts = 0
-    private val maxReconnectAttempts = 3
-    private val reconnectDelayMillis = 2000L
-    private val handler = Handler(Looper.getMainLooper())
+    var volunteerId: String? = null
+    var onReady: ((String) -> Unit)? = null
+    var onStarted: (() -> Unit)? = null
+    var onEnded: (() -> Unit)? = null
 
-    fun setUrl(url: String) {
-        socketUrl = url
-    }
+    var isConnected = false
 
     fun connect() {
-        if (isConnected || webSocket != null) {
-            Log.d("LocationWebSocketClient", "Already connected or connecting")
-            return
-        }
-        val request = Request.Builder().url(socketUrl).build()
-        webSocket = client.newWebSocket(request, LocationWebSocketListener())
-        Log.d("LocationWebSocketClient", "Connecting to $socketUrl")
-    }
-
-    fun disconnect() {
-        isConnected = false
-        webSocket?.close(1000, "Client disconnect")
-        webSocket = null
-        Log.d("LocationWebSocketClient", "WebSocket disconnected")
-    }
-
-    fun sendMessage(message: String) {
-        if (isConnected && webSocket != null) {
-            val success = webSocket!!.send(message)
-            if (!success) {
-                Log.w("LocationWebSocketClient", "Failed to send message, socket may be closing")
+        val request = Request.Builder().url(url).build()
+        webSocket = client.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(ws: WebSocket, response: Response) {
+                isConnected = true
+                Logger.d("LocationWS", "✅ 위치 WebSocket 연결됨")
             }
-        } else {
-            Log.w("LocationWebSocketClient", "WebSocket not connected, cannot send message")
+
+            override fun onMessage(ws: WebSocket, text: String) {
+                Logger.d("LocationWS", "메시지 수신: $text")
+                try {
+                    val msg = Json.parseToJsonElement(text).jsonObject
+                    val type = msg["type"]?.jsonPrimitive?.content
+                    val data = msg["data"]
+
+                    when (type) {
+                        "READY" -> {
+                            volunteerId = data?.jsonObject?.get("participantUserId")?.jsonPrimitive?.content
+                            Logger.d("LocationWS", "volunteerId 저장됨: $volunteerId")
+                            onReady?.invoke(volunteerId ?: "")
+                        }
+                        "STARTED" -> {
+                            Logger.d("LocationWS", "▶️ 위치 전송 시작")
+                            onStarted?.invoke()
+                        }
+                        "ENDED" -> {
+                            Logger.d("LocationWS", "⏹️ 위치 전송 종료")
+                            onEnded?.invoke()
+                        }
+                        else -> Logger.d("LocationWS", "알 수 없는 메시지 타입: $type")
+                    }
+                } catch (e: Exception) {
+                    Logger.w("LocationWS", "메시지 파싱 오류", e)
+                }
+            }
+
+            override fun onClosed(ws: WebSocket, code: Int, reason: String) {
+                isConnected = false
+                Logger.w("LocationWS", "WebSocket 종료: code=$code, reason=$reason")
+                scheduleReconnect()
+            }
+
+            override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
+                isConnected = false
+                Logger.e("LocationWS", "WebSocket 실패", t)
+                scheduleReconnect()
+            }
+        })
+    }
+
+    private fun scheduleReconnect() {
+        reconnectHandler?.let { return } // 이미 등록되어 있으면 중복 방지
+        reconnectHandler = Runnable {
+            Logger.d("LocationWS", "재연결 시도")
+            connect()
+            reconnectHandler = null
         }
+        // 5초 후 재연결
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(reconnectHandler!!, 5000)
     }
 
     fun sendLocation(volunteerId: String, latitude: Double, longitude: Double) {
-        val jsonMessage = """
-            {
-                "volunteerId": "$volunteerId",
-                "latitude": $latitude,
-                "longitude": $longitude
+        val msg = buildJsonObject {
+            put("type", "location_update")
+            putJsonObject("data") {
+                put("volunteerId", volunteerId)
+                put("latitude", latitude)
+                put("longitude", longitude)
             }
-        """.trimIndent()
-        sendMessage(jsonMessage)
+        }.toString()
+        if (isConnected) webSocket?.send(msg)
+        Logger.d("LocationWS", "위치 전송: lat=$latitude, lng=$longitude")
     }
 
-    private fun attemptReconnect() {
-        if (reconnectAttempts >= maxReconnectAttempts) {
-            Log.w("LocationWebSocketClient", "Max reconnect attempts reached")
-            return
-        }
-        reconnectAttempts++
-        Log.d("LocationWebSocketClient", "Attempting reconnect #$reconnectAttempts in $reconnectDelayMillis ms")
-        handler.postDelayed({
-            Log.d("LocationWebSocketClient", "Reconnecting...")
-            connect()
-        }, reconnectDelayMillis)
-    }
-
-    private inner class LocationWebSocketListener : WebSocketListener() {
-        override fun onOpen(webSocket: WebSocket, response: Response) {
-            Log.d("LocationWebSocketClient", "WebSocket opened")
-            isConnected = true
-            reconnectAttempts = 0
-        }
-
-        override fun onMessage(webSocket: WebSocket, text: String) {
-            Log.d("LocationWebSocketClient", "Received message: $text")
-        }
-
-        override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-            Log.d("LocationWebSocketClient", "WebSocket closing: $code / $reason")
-            isConnected = false
-            webSocket.close(code, reason)
-            this@LocationWebSocketClient.webSocket = null
-        }
-
-        override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-            Log.e("LocationWebSocketClient", "WebSocket failure", t)
-            isConnected = false
-            this@LocationWebSocketClient.webSocket = null
-            attemptReconnect()
-        }
+    fun disconnect() {
+        webSocket?.close(1000, "앱 종료")
+        webSocket = null
+        isConnected = false
+        Logger.d("LocationWS", "WebSocket 연결 해제")
     }
 }
