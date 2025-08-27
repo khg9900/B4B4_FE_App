@@ -36,8 +36,12 @@ export const volunteerpostApi = {
 };
 
 export const volunteerparticipantApi = {
-  getMyParticipations: async (): Promise<VolunteerParticipationResponse[]> => {
-    const res = await axiosInstance.get('/volunteer-participants/my');
+  getMyParticipations: async (params?: {
+    status?: string;
+    startTime?: string;
+    endTime?: string;
+  }): Promise<VolunteerParticipationResponse[]> => {
+    const res = await axiosInstance.get('/volunteer-participants/my', { params });
     return res.data.payload;
   },
 
