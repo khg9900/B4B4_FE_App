@@ -3,23 +3,25 @@ package com.disasteraidplatform.util
 import android.util.Log
 
 object Logger {
+    private const val TAG = "DisasterAid"
+
     fun d(tag: String, message: String) {
-        android.util.Log.d(tag, message)
+        Log.d("$TAG-$tag", message)
     }
 
     fun w(tag: String, message: String, throwable: Throwable? = null) {
         if (throwable != null) {
-            android.util.Log.w(tag, message, throwable)
+            Log.w("$TAG-$tag", message, throwable)
         } else {
-            android.util.Log.w(tag, message)
+            Log.w("$TAG-$tag", message)
         }
     }
 
     fun e(tag: String, message: String, throwable: Throwable? = null) {
         if (throwable != null) {
-            android.util.Log.e(tag, message, throwable)
+            Log.e("$TAG-$tag", message, throwable)
         } else {
-            android.util.Log.e(tag, message)
+            Log.e("$TAG-$tag", message)
         }
     }
 }

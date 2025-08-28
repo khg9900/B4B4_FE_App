@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Intent
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -47,11 +48,12 @@ class ForegroundService : Service() {
 
         locationProvider = LocationProvider(this)
         locationProvider.startLocationUpdates()
+
         handler.post(sendLocationRunnable)
         Logger.d("ForegroundService", "서비스 시작, 위치 전송 주기 $LOCATION_SEND_INTERVAL_MS ms")
     }
 
-    override fun onStartCommand(intent: android.content.Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val token = JwtManager.getToken()
 
         if (token.isNullOrEmpty()) {
@@ -125,5 +127,5 @@ class ForegroundService : Service() {
         }
     }
 
-    override fun onBind(intent: android.content.Intent?): IBinder? = null
+    override fun onBind(intent: Intent?): IBinder? = null
 }

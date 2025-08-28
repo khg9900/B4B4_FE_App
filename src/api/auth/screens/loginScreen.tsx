@@ -17,7 +17,10 @@ import { requestPushPermission } from '../../alert/fcm/fcmPermissions';
 import { getFcmToken } from '../../alert/fcm/fcmTokenManager';
 import { sendDeviceInfoToServer } from '../../alert/fcm/sendDeviceInfo';
 import { jwtDecode } from 'jwt-decode';
-import {   startLocationSenderService, startTrackingService, startForegroundService } from '../../location/hooks/startLocationService';
+import {
+  startLocationSenderService,
+  startForegroundService,
+} from '../../location/hooks/startLocationService';
 
 interface DecodedToken {
   id: number;
@@ -40,8 +43,8 @@ const LoginScreen = () => {
         const savedToken = await AsyncStorage.getItem('accessToken');
         if (savedToken) {
           setJwtToken(savedToken);
-              startForegroundService(); 
-              startLocationSenderService();
+          startForegroundService();
+          startLocationSenderService();
 
           const permissionGranted = await requestPushPermission();
           if (permissionGranted) {
@@ -86,8 +89,8 @@ const LoginScreen = () => {
         }
       }
 
-      startLocationSenderService(); // 위치 전송 서비스 시작
-      startForegroundService(); // 포그라운드 서비스 시작
+      startForegroundService();
+      startLocationSenderService();
 
       Alert.alert('로그인 성공');
 
@@ -102,57 +105,44 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Image source={require('../../../img/b4b4.png')} style={styles.logo} />
+      <Image source={require('../../../assets/logo.png')} style={styles.logo} />
       <TextInput
-        placeholder="이메일"
         style={styles.input}
+        placeholder="이메일"
         value={form.email}
-        onChangeText={text => setForm({ ...form, email: text })}
-        autoCapitalize="none"
+        onChangeText={(text) => setForm({ ...form, email: text })}
       />
       <TextInput
-        placeholder="비밀번호"
         style={styles.input}
+        placeholder="비밀번호"
         secureTextEntry
         value={form.password}
-        onChangeText={text => setForm({ ...form, password: text })}
-        autoCapitalize="none"
+        onChangeText={(text) => setForm({ ...form, password: text })}
       />
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>로그인</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.signUpLink}
-        onPress={() => navigation.navigate('SignUp' as never)}
-      >
-        <Text style={styles.signUpText}>회원가입</Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>로그인</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
+export default LoginScreen;
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  logo: { width: 120, height: 120, resizeMode: 'contain', alignSelf: 'center' },
+  container: { flex: 1, justifyContent: 'center', padding: 20 },
+  logo: { width: 120, height: 120, alignSelf: 'center', marginBottom: 30 },
   input: {
+    height: 50,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+    paddingHorizontal: 10,
   },
-  loginButton: {
-    backgroundColor: '#f26522',
-    paddingVertical: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: 10,
-    height: 53,
+  button: {
+    backgroundColor: '#007bff',
+    padding: 15,
+    borderRadius: 8,
   },
-  loginButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  signUpLink: { marginTop: 10, alignItems: 'center' },
-  signUpText: { color: '#f26522', fontWeight: '600' },
+  buttonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
 });
-
-export default LoginScreen;
