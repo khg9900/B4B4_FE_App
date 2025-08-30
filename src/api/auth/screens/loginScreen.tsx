@@ -17,7 +17,7 @@ import { requestPushPermission } from '../../alert/fcm/fcmPermissions';
 import { getFcmToken } from '../../alert/fcm/fcmTokenManager';
 import { sendDeviceInfoToServer } from '../../alert/fcm/sendDeviceInfo';
 import { jwtDecode } from 'jwt-decode';
-import {   startLocationSenderService, startTrackingService, startForegroundService } from '../../location/hooks/startLocationService';
+import { startAllServices} from '../../location/hooks/startLocationService';
 
 interface DecodedToken {
   id: number;
@@ -40,8 +40,7 @@ const LoginScreen = () => {
         const savedToken = await AsyncStorage.getItem('accessToken');
         if (savedToken) {
           setJwtToken(savedToken);
-              startForegroundService(); 
-              startLocationSenderService();
+              startAllServices(); // 위치 전송 및 추적 서비스 시작
 
           const permissionGranted = await requestPushPermission();
           if (permissionGranted) {
@@ -86,8 +85,7 @@ const LoginScreen = () => {
         }
       }
 
-      startLocationSenderService(); // 위치 전송 서비스 시작
-      startForegroundService(); // 포그라운드 서비스 시작
+      startAllServices(); // 위치 전송 및 추적 서비스 시작
 
       Alert.alert('로그인 성공');
 

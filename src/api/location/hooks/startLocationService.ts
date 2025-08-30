@@ -3,10 +3,6 @@ import { NativeModules, Platform } from 'react-native';
 const { IntentLauncher } = NativeModules;
 
 type ServiceAction =
-  | 'START_TRACKING'
-  | 'STOP_TRACKING'
-  | 'START_SENDER'
-  | 'STOP_SENDER'
   | 'START_FOREGROUND'
   | 'STOP_FOREGROUND';
 
@@ -24,45 +20,27 @@ function invokeService(
 
   try {
     if (foreground) {
-      IntentLauncher.startForegroundService?.(className, action);
+      IntentLauncher.startForegroundService?.(action); // className 불필요
     } else {
-      IntentLauncher.startService?.(className, action);
+      IntentLauncher.stopService?.(); // className 불필요
     }
   } catch (e) {
     console.error(`[invokeService] error during ${action} → ${className}:`, e);
   }
 }
 
-// 서비스 클래스명 (패키지 포함 전체 경로)
-const TRACKING_SERVICE = 'com.disasteraidplatform.service.TrackingService';
-const SENDER_SERVICE = 'com.disasteraidplatform.service.LocationSenderService';
-const FOREGROUND_SERVICE = 'com.disasteraidplatform.service.ForegroundService';
-
-// START는 모두 foreground=true
-export function startTrackingService() {
-  invokeService(TRACKING_SERVICE, 'START_TRACKING', true);
-}
-export function stopTrackingService() {
-  invokeService(TRACKING_SERVICE, 'STOP_TRACKING', false);
-}
-
-export function startLocationSenderService() {
-  invokeService(SENDER_SERVICE, 'START_SENDER', true);
-}
-export function stopLocationSenderService() {
-  invokeService(SENDER_SERVICE, 'STOP_SENDER', false);
-}
+// 통합 포그라운드 서비스 클래스명 (Kotlin 단에서 단일 서비스만 import)
+const FOREGROUND_SERVICE = 'com.disasteraidplatform.service.ForegroundLocationService';
 
 export function startForegroundService() {
   invokeService(FOREGROUND_SERVICE, 'START_FOREGROUND', true);
 }
+
 export function stopForegroundService() {
   invokeService(FOREGROUND_SERVICE, 'STOP_FOREGROUND', false);
 }
 
-// 앱 시작 시 한 번에 3개 모두 띄우고 싶으면
+// 앱 시작 시 서비스 한 번만 실행
 export function startAllServices() {
   startForegroundService();
-  startTrackingService();
-  startLocationSenderService();
 }

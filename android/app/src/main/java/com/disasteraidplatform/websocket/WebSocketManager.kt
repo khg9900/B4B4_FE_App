@@ -2,38 +2,38 @@ package com.disasteraidplatform.websocket
 
 import com.disasteraidplatform.util.Logger
 
-class WebSocketManager(
-    private val locationUrl: String,
-    private val trackingUrl: String
-) {
+class WebSocketManager(locationUrl: String, trackingUrl: String) {
 
     val locationWS = LocationWebSocketClient(locationUrl)
     val trackingWS = TrackingWebSocketClient(trackingUrl)
+
     var volunteerId: String? = null
+        private set
 
     fun connectAll(
-        onLocationReady: ((String) -> Unit)? = null,
-        onLocationStarted: (() -> Unit)? = null,
-        onLocationEnded: (() -> Unit)? = null,
-        onTrackingReady: ((String) -> Unit)? = null,
-        onTrackingStarted: (() -> Unit)? = null,
-        onTrackingEnded: (() -> Unit)? = null
+        onTrackingEvent: ((TrackingWebSocketClient.TrackingEvent) -> Unit)? = null,
+        onReady: (() -> Unit)? = null
     ) {
-        locationWS.onReady = { id ->
-            volunteerId = id
-            onLocationReady?.invoke(id)
-        }
-        locationWS.onStarted = { onLocationStarted?.invoke() }
-        locationWS.onEnded = { onLocationEnded?.invoke() }
+        trackingWS.onEvent = { event ->
+            when (event) {
+                is TrackingWebSocketClient.TrackingEvent.Ready -> {
+                    volunteerId = event.volunteerId
+                    Logger.d("WebSocketManager", "Tracking READY received, volunteerId=$volunteerId")
+                    onReady?.invoke()
+                }
+                is TrackingWebSocketClient.TrackingEvent.Ended -> {
+                    Logger.d("WebSocketManager", "Tracking ENDED received, clearing volunteerId")
+                    // ENDED 시 volunteerId 삭제
+                    volunteerId = null
+                }
+                else -> {}
+            }
 
-        trackingWS.onReady = { id ->
-            volunteerId = id
-            onTrackingReady?.invoke(id)
+            // 항상 호출
+            onTrackingEvent?.invoke(event)
         }
-        trackingWS.onStarted = { onTrackingStarted?.invoke() }
-        trackingWS.onEnded = { onTrackingEnded?.invoke() }
 
-        Logger.d("WebSocketManager", "Location 및 Tracking WebSocket 연결 시작")
+        Logger.d("WebSocketManager", "Connecting Location & Tracking WebSocket")
         locationWS.connect()
         trackingWS.connect()
     }
@@ -41,11 +41,6 @@ class WebSocketManager(
     fun disconnectAll() {
         locationWS.disconnect()
         trackingWS.disconnect()
-        Logger.d("WebSocketManager", "Location 및 Tracking WebSocket 연결 해제")
-    }
-
-    fun sendLocation(lat: Double, lng: Double) {
-        volunteerId?.let { locationWS.sendLocation(it, lat, lng) }
-            ?: Logger.w("WebSocketManager", "volunteerId가 없어서 위치 전송 불가")
+        Logger.d("WebSocketManager", "Disconnected Location & Tracking WebSocket")
     }
 }

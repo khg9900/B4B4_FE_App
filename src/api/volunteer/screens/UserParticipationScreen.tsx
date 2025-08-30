@@ -13,6 +13,22 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { volunteerparticipantApi } from '../api/VolunteerApi';
 import type { VolunteerParticipationResponse } from '../types/Participation';
 
+// 로컬 Date → KST ISO 문자열 변환
+const formatAsKSTISOString = (date: Date): string => {
+  const kstOffset = 9 * 60; // KST는 UTC+9
+  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+  const kstDate = new Date(utc + kstOffset * 60000);
+
+  const year = kstDate.getFullYear();
+  const month = String(kstDate.getMonth() + 1).padStart(2, "0");
+  const day = String(kstDate.getDate()).padStart(2, "0");
+  const hours = String(kstDate.getHours()).padStart(2, "0");
+  const minutes = String(kstDate.getMinutes()).padStart(2, "0");
+  const seconds = String(kstDate.getSeconds()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
 const formatDateTime = (date: Date | null) => {
   if (!date) return '';
   return `${date.getFullYear()}-${(date.getMonth() + 1)
@@ -52,8 +68,8 @@ const UserParticipationScreen = () => {
     try {
       const params: any = {};
       if (statusFilter) params.status = statusFilter;
-      if (startTime) params.startTime = startTime.toISOString();
-      if (endTime) params.endTime = endTime.toISOString();
+      if (startTime) params.startTime = formatAsKSTISOString(startTime);
+      if (endTime) params.endTime = formatAsKSTISOString(endTime);
 
       const data = await volunteerparticipantApi.getMyParticipations(params);
       setParticipations(data);
@@ -64,12 +80,25 @@ const UserParticipationScreen = () => {
 
   const handleCancel = async (participantId: number) => {
     try {
+      // 화면에서 즉시 상태 변경
+      setParticipations((prev) =>
+        prev.map((p) =>
+          p.participantId === participantId
+            ? { ...p, status: 'CANCELLED' }
+            : p
+        )
+      );
+
+      // 서버에 상태 변경 요청
       await volunteerparticipantApi.cancelParticipation(participantId);
+
       Alert.alert('알림', '참가가 취소되었습니다.');
-      fetchMyParticipations();
     } catch (error: any) {
       console.error('참가 취소 실패:', error.response?.data || error.message);
       Alert.alert('오류', error.response?.data?.message || '참가 취소 중 문제가 발생했습니다.');
+
+      // 실패하면 다시 서버 상태로 롤백
+      fetchMyParticipations();
     }
   };
 
@@ -201,7 +230,7 @@ const UserParticipationScreen = () => {
         </View>
       </Modal>
 
-      {/* DateTimePicker - Start */}
+      {/* DateTimePicker */}
       {showStartPicker && (
         <DateTimePicker
           value={startTime || new Date()}
@@ -226,7 +255,6 @@ const UserParticipationScreen = () => {
         />
       )}
 
-      {/* DateTimePicker - End */}
       {showEndPicker && (
         <DateTimePicker
           value={endTime || new Date()}
@@ -264,48 +292,16 @@ const UserParticipationScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  filterSection: {
-    padding: 16,
-    backgroundColor: '#f8f9fa',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-  },
+  filterSection: { padding: 16, backgroundColor: '#f8f9fa', borderBottomWidth: 1, borderBottomColor: '#e9ecef' },
   filterRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   filterLabel: { fontSize: 14, fontWeight: 'bold', marginRight: 8, color: '#333' },
-  pickerWrapper: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-  },
+  pickerWrapper: { flex: 1, height: 40, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, paddingHorizontal: 12, backgroundColor: 'white', justifyContent: 'center' },
   pickerText: { fontSize: 14, color: '#333' },
   datePickerRow: { flexDirection: 'row', gap: 8 },
-  datePickerButton: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: '#e9ecef',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
+  datePickerButton: { flex: 1, padding: 12, backgroundColor: '#e9ecef', borderRadius: 8, alignItems: 'center' },
   datePickerText: { fontSize: 12, color: '#333', textAlign: 'center' },
   listContainer: { padding: 16, paddingBottom: 100 },
-  card: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 14,
-    backgroundColor: '#fafafa',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
+  card: { borderWidth: 1, borderColor: '#ddd', padding: 16, borderRadius: 12, marginBottom: 14, backgroundColor: '#fafafa', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   title: { fontSize: 18, fontWeight: 'bold', marginBottom: 8, color: '#333' },
   infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   infoIcon: { width: 16, marginRight: 6, fontSize: 12 },
@@ -320,20 +316,7 @@ const styles = StyleSheet.create({
   cancelButton: { marginTop: 12, backgroundColor: '#ff8800', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
   cancelButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
-  modalContainer: {
-    position: 'absolute',
-    top: 120,
-    left: 16,
-    right: 16,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
+  modalContainer: { position: 'absolute', top: 120, left: 16, right: 16, backgroundColor: '#fff', borderRadius: 8, paddingVertical: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5 },
   modalItem: { paddingVertical: 12, paddingHorizontal: 16 },
   modalItemText: { fontSize: 14, color: '#333' },
 });
