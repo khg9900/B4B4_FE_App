@@ -10,31 +10,23 @@ type ServiceAction =
   | 'START_FOREGROUND'
   | 'STOP_FOREGROUND';
 
-function invokeService(className: string, action: ServiceAction, foreground = false) {
-  if (Platform.OS !== 'android') {
-    console.warn(`invokeService(${action}) only supported on Android`);
-    return;
-  }
-  if (!IntentLauncher) {
-    console.error('IntentLauncher module is not available');
-    return;
-  }
+function invokeService(
+  className: string,
+  action: ServiceAction,
+  foreground = false
+) {
+  if (Platform.OS !== 'android') return;
+  if (!IntentLauncher) return;
 
-  console.log(`[invokeService] 호출 → className: ${className}, action: ${action}, foreground: ${foreground}`);
+  console.log(
+    `[invokeService] 호출 → className: ${className}, action: ${action}, foreground: ${foreground}`
+  );
 
   try {
     if (foreground) {
-      if (typeof IntentLauncher.startForegroundService === 'function') {
-        IntentLauncher.startForegroundService(className, action);
-      } else {
-        console.error('startForegroundService method is not available in IntentLauncher');
-      }
+      IntentLauncher.startForegroundService?.(className, action);
     } else {
-      if (typeof IntentLauncher.startService === 'function') {
-        IntentLauncher.startService(className, action);
-      } else {
-        console.error('startService method is not available in IntentLauncher');
-      }
+      IntentLauncher.startService?.(className, action);
     }
   } catch (e) {
     console.error(`[invokeService] error during ${action} → ${className}:`, e);
@@ -46,7 +38,7 @@ const TRACKING_SERVICE = 'com.disasteraidplatform.service.TrackingService';
 const SENDER_SERVICE = 'com.disasteraidplatform.service.LocationSenderService';
 const FOREGROUND_SERVICE = 'com.disasteraidplatform.service.ForegroundService';
 
-// START는 foreground=true 넘겨서 시작
+// START는 모두 foreground=true
 export function startTrackingService() {
   invokeService(TRACKING_SERVICE, 'START_TRACKING', true);
 }
@@ -66,4 +58,11 @@ export function startForegroundService() {
 }
 export function stopForegroundService() {
   invokeService(FOREGROUND_SERVICE, 'STOP_FOREGROUND', false);
+}
+
+// 앱 시작 시 한 번에 3개 모두 띄우고 싶으면
+export function startAllServices() {
+  startForegroundService();
+  startTrackingService();
+  startLocationSenderService();
 }
