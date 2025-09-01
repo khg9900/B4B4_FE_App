@@ -48,26 +48,12 @@
             </intent-filter>
         </service>
 
-        <!-- 위치 추적 서비스 -->
+        <!-- 통합 포그라운드 서비스 -->
         <service
-            android:name=".service.TrackingService"
+            android:name=".service.ForegroundLocationService"
             android:enabled="true"
             android:exported="true"
-            android:foregroundServiceType="location" />
-
-        <!-- 위치 전송 서비스 -->
-        <service
-            android:name=".service.LocationSenderService"
-            android:enabled="true"
-            android:exported="true"
-            android:foregroundServiceType="location" />
-
-        <!-- 포그라운드 서비스 -->
-        <service
-            android:name=".service.ForegroundService"
-            android:enabled="true"
-            android:exported="true"
-            android:foregroundServiceType="location" />
+            android:foregroundServiceType="location|dataSync" />
 
         <!-- 메인 액티비티 -->
         <activity
