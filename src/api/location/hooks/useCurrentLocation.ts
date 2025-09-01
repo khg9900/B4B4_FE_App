@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
 import fetchRegionCode from '../utils/fetchRegionCode';
-import {
-  startTrackingService,
-  stopTrackingService,
-} from '../hooks/startLocationService';
 
 const INTENT_LAUNCHER_MODULE = NativeModules.IntentLauncher;
 const LOCATION_CACHE_MODULE = NativeModules.LocationCache;
@@ -120,12 +116,9 @@ export function useCurrentLocation() {
 
     fetchCachedLocation();
 
-    startTrackingService();
-
     return () => {
       isMounted = false;
       subscription.remove();
-      stopTrackingService();
 
       if (timeoutId) {
         clearTimeout(timeoutId);

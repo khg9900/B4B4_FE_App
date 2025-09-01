@@ -5,58 +5,32 @@ import android.os.Build
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.disasteraidplatform.service.ForegroundLocationService // ✅ 단일 서비스만 import
 
 class IntentLauncherModule(private val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
     override fun getName(): String = "IntentLauncher"
 
-    private fun createIntent(className: String): Intent? {
-        return when (className) {
-            "com.disasteraidplatform.service.TrackingService" ->
-                Intent(reactContext, com.disasteraidplatform.service.TrackingService::class.java)
-            "com.disasteraidplatform.service.LocationSenderService" ->
-                Intent(reactContext, com.disasteraidplatform.service.LocationSenderService::class.java)
-            "com.disasteraidplatform.service.ForegroundService" ->
-                Intent(reactContext, com.disasteraidplatform.service.ForegroundService::class.java)
-            else -> null
+    private fun createIntent(): Intent {
+        return Intent(reactContext, ForegroundLocationService::class.java)
+    }
+
+    @ReactMethod
+    fun startForegroundService(action: String) {
+        val intent = createIntent()
+        intent.action = action
+        intent.putExtra("isForeground", true)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            reactContext.startForegroundService(intent)
+        } else {
+            reactContext.startService(intent)
         }
     }
 
     @ReactMethod
-    fun startService(className: String, action: String) {
-        val intent = createIntent(className)
-        intent?.let {
-            it.action = action
-            it.putExtra("isForeground", false) // 포그라운드 아닌 일반 서비스
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                reactContext.startForegroundService(it) // Android O 이상도 그냥 startForegroundService 사용해도 무방
-            } else {
-                reactContext.startService(it)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun startForegroundService(className: String, action: String) {
-        val intent = createIntent(className)
-        intent?.let {
-            it.action = action
-            it.putExtra("isForeground", true) // 포그라운드 서비스임을 표시
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                reactContext.startForegroundService(it)
-            } else {
-                reactContext.startService(it)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun stopService(className: String) {
-        val intent = createIntent(className)
-        intent?.let {
-            reactContext.stopService(it)
-        }
+    fun stopService() {
+        val intent = createIntent()
+        reactContext.stopService(intent)
     }
 }
