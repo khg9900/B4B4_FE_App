@@ -1,5 +1,6 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "kotlinx-serialization" 
 apply plugin: "com.facebook.react"
 apply plugin: "com.google.gms.google-services"
 
@@ -129,6 +130,7 @@ dependencies {
 
     implementation('com.google.android.gms:play-services-location:21.0.1')
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"
     configurations.all {
     resolutionStrategy.eachDependency { details ->
         if (details.requested.group == 'com.google.android.gms' &&
