@@ -74,8 +74,8 @@ class ForegroundLocationService : Service() {
 
     private fun startWebSocket() {
         val token = JwtManager.getToken() ?: return
-        val locationUrl = "ws://192.168.45.90:8080/api/location-tracking?token=$token"
-        val trackingUrl = "ws://192.168.45.90:8080/api/tracking?token=$token"
+        val locationUrl = "ws://192.168.0.12:8080/api/location-tracking?token=$token"
+        val trackingUrl = "ws://192.168.0.12:8080/api/tracking?token=$token"
 
         wsManager = WebSocketManager(locationUrl, trackingUrl)
 
