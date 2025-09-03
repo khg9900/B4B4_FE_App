@@ -11,9 +11,9 @@ import {
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
 import axiosInstance from '../../global/api/axiosInstance';
-import { volunteerpostApi } from '../api/VolunteerApi';
+import { volunteerApi } from '../api/VolunteerApi';
 import type { PostDetailResponse } from '../types/Post';
-
+import { KAKAO_JS_API_KEY } from '@env';
 interface Team {
   teamId: number;
   teamNumber: number;
@@ -31,7 +31,7 @@ const VolunteerPostDetailScreen = () => {
 
   const fetchPostDetail = async () => {
     try {
-      const data = await volunteerpostApi.getPostDetail(postId);
+      const data = await volunteerApi.getPostDetail(postId);
       setPostDetail(data);
     } catch (err) {
       console.error('상세 정보 조회 실패:', err);
@@ -73,7 +73,7 @@ const VolunteerPostDetailScreen = () => {
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=31a31381a7d1acbd943f186a483e4194"></script>
+      <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_API_KEY}"></script>
       <style>
         html, body { margin: 0; padding: 0; height: 100%; }
         #map { width: 100%; height: 100%; }

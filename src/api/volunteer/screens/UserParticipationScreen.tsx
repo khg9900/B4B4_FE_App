@@ -10,7 +10,7 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { volunteerparticipantApi } from '../api/VolunteerApi';
+import { volunteerParticipantApi } from '../api/VolunteerApi';
 import type { VolunteerParticipationResponse } from '../types/Participation';
 
 // 로컬 Date → KST ISO 문자열 변환
@@ -71,7 +71,7 @@ const UserParticipationScreen = () => {
       if (startTime) params.startTime = formatAsKSTISOString(startTime);
       if (endTime) params.endTime = formatAsKSTISOString(endTime);
 
-      const data = await volunteerparticipantApi.getMyParticipations(params);
+      const data = await volunteerParticipantApi.getMyParticipations(params);
       setParticipations(data);
     } catch (error) {
       console.error('참가 목록 조회 실패:', error);
@@ -90,7 +90,7 @@ const UserParticipationScreen = () => {
       );
 
       // 서버에 상태 변경 요청
-      await volunteerparticipantApi.cancelParticipation(participantId);
+      await volunteerParticipantApi.cancelParticipation(participantId);
 
       Alert.alert('알림', '참가가 취소되었습니다.');
     } catch (error: any) {
