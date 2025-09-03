@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ✅ 환경별 baseURL 정의
 const emulatorURL = 'http://10.0.2.2:8080/api'; // Android 에뮬레이터용
-const localIP = '192.168.45.90';                // PC 로컬 IP
+const localIP = '192.168.45.67';                // PC 로컬 IP
 const localURL = `http://${localIP}:8080/api`;
 const productionURL = 'http://54.180.32.246:8080/api'; // ✅ EC2 서버
 
