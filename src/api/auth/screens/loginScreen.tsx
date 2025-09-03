@@ -89,7 +89,7 @@ const LoginScreen = () => {
 
       Alert.alert('로그인 성공');
 
-      if (role === 'IND') navigation.navigate('ReportScreen' as never);
+      if (role === 'IND') navigation.navigate('MainScreen' as never);
       else if (role === 'GOV') navigation.navigate('Dashboard' as never);
       else navigation.navigate('MainScreen' as never);
     } catch (error) {

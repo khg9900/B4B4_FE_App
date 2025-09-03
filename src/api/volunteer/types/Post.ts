@@ -1,7 +1,7 @@
 export interface CreatePostRequest {
   title: string;
   content: string;
-  category: 'RECRUITMENT'; // 무조건 RECRUITMENT로 고정
+  category: 'RECRUITMENT'; // 무조건 RECRUITMENT
   totalCapacity: number;
   teamSize: number;
   location: {
@@ -10,32 +10,38 @@ export interface CreatePostRequest {
     longitude: number;
   };
   attendancePolicy: {
-    checkinStart: string; // ISO 형식 e.g., "2025-06-20T09:00:00"
+    checkinStart: string; // ISO 8601
     checkinEnd: string;
     allowedRadiusM: number;
     minStayMinutes: number;
   };
 }
 
-export interface VolunteerPostItem {
+// 서버 DTO 기반 게시글 리스트 아이템
+export interface PostsResponse {
   id: number;
   title: string;
-  nickname: string;
-  createdAt: string;
+  volunteerDate: string; // yyyy-MM-dd
+  province?: string;
+  city?: string;
   category: 'RECRUITMENT' | 'SUPPORT';
-  capacity: number;
+  totalCapacity: number;
+  recruitmentStartDate?: string;
+  recruitmentEndDate?: string;
+  status: 'OPEN' | 'CLOSED' | 'COMPLETED';
 }
 
-export interface VolunteerPostPage {
-  content: VolunteerPostItem[];
+// Slice 구조
+export interface SliceResponse<T> {
+  content: T[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+  };
   last: boolean;
-  totalPages: number;
-  totalElements: number;
-  number: number; // current page
-  size: number;
-  numberOfElements: number;
 }
 
+// 게시글 상세
 export interface PostDetailResponse {
   title: string;
   content: string;
@@ -55,6 +61,7 @@ export interface PostDetailResponse {
   };
 }
 
+// 팀 관련
 export interface PostTeamsResponse {
   postId: number;
   teams: TeamStatus[];
@@ -65,4 +72,14 @@ export interface TeamStatus {
   teamNumber: number;
   maxCapacity: number;
   currentCount: number;
+}
+
+// 필터 요청
+export interface PostFilterRequest {
+  province?: string;
+  city?: string;
+  status?: 'OPEN' | 'CLOSED' | 'COMPLETED';
+  category?: 'RECRUITMENT' | 'SUPPORT';
+  volunteerStartDate?: string; // yyyy-MM-dd
+  volunteerEndDate?: string;   // yyyy-MM-dd
 }
