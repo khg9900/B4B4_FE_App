@@ -17,7 +17,7 @@ import { requestPushPermission } from '../../alert/fcm/fcmPermissions';
 import { getFcmToken } from '../../alert/fcm/fcmTokenManager';
 import { sendDeviceInfoToServer } from '../../alert/fcm/sendDeviceInfo';
 import { jwtDecode } from 'jwt-decode';
-import { startAllServices} from '../../location/hooks/startLocationService';
+import { startAllServices } from '../../location/hooks/startLocationService';
 
 interface DecodedToken {
   id: number;
@@ -40,7 +40,7 @@ const LoginScreen = () => {
         const savedToken = await AsyncStorage.getItem('accessToken');
         if (savedToken) {
           setJwtToken(savedToken);
-              startAllServices(); // 위치 전송 및 추적 서비스 시작
+          startAllServices();
 
           const permissionGranted = await requestPushPermission();
           if (permissionGranted) {
@@ -85,8 +85,7 @@ const LoginScreen = () => {
         }
       }
 
-      startAllServices(); // 위치 전송 및 추적 서비스 시작
-
+      startAllServices();
       Alert.alert('로그인 성공');
 
       if (role === 'IND') navigation.navigate('MainScreen' as never);
@@ -107,6 +106,7 @@ const LoginScreen = () => {
         value={form.email}
         onChangeText={text => setForm({ ...form, email: text })}
         autoCapitalize="none"
+        placeholderTextColor="#999"
       />
       <TextInput
         placeholder="비밀번호"
@@ -115,9 +115,10 @@ const LoginScreen = () => {
         value={form.password}
         onChangeText={text => setForm({ ...form, password: text })}
         autoCapitalize="none"
+        placeholderTextColor="#999"
       />
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>로그인</Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>로그인</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -139,16 +140,19 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     marginBottom: 12,
+    color: '#000', // 입력 글씨 검은색
   },
-  loginButton: {
+  button: {
     backgroundColor: '#f26522',
+    borderWidth: 1,
+    borderColor: '#fff',
     paddingVertical: 12,
     borderRadius: 6,
     alignItems: 'center',
     marginTop: 10,
     height: 53,
   },
-  loginButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   signUpLink: { marginTop: 10, alignItems: 'center' },
   signUpText: { color: '#f26522', fontWeight: '600' },
 });
