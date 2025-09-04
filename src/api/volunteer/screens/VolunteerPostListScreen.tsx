@@ -98,25 +98,50 @@ const VolunteerPostListScreen = () => {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   };
 
-  const renderItem = ({ item }: { item: VolunteerPostItem }) => (
-    <TouchableOpacity onPress={() => navigation.navigate('PostDetail', { postId: item.id })}>
-      <View style={styles.card}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.subtext}>
-          {item.province ?? ''} {item.city ?? ''} | {item.volunteerDate}
-        </Text>
-        <Text style={styles.capacity}>
-          ({item.currentParticipants} / {item.totalCapacity})
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const getStatusStyle = (status: string | null) => {
+    switch (status) {
+      case 'OPEN':
+        return { backgroundColor: '#28a745' };
+      case 'CLOSED':
+        return { backgroundColor: '#ffc107' };
+      case 'COMPLETED':
+        return { backgroundColor: '#6c757d' };
+      default:
+        return { backgroundColor: '#adb5bd' };
+    }
+  };
+
+  const renderItem = ({ item }: { item: VolunteerPostItem }) => {
+    const statusLabel =
+      STATUS_OPTIONS.find((o) => o.value === item.status)?.label ?? '';
+
+    return (
+      <TouchableOpacity
+        onPress={() => navigation.navigate('PostDetail', { postId: item.id })}
+      >
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.title}>{item.title}</Text>
+            <View style={[styles.statusBadge, getStatusStyle(item.status)]}>
+              <Text style={styles.statusText}>{statusLabel}</Text>
+            </View>
+          </View>
+
+          <Text style={styles.subtext}>
+            {item.province ?? ''} {item.city ?? ''} | {item.volunteerDate}
+          </Text>
+          <Text style={styles.capacity}>
+            ({item.currentParticipants} / {item.totalCapacity})
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
       {/* 필터 영역 */}
       <View style={styles.filterSection}>
-        {/* 첫 줄 */}
         <View style={styles.filterRow}>
           <TouchableOpacity style={styles.pickerWrapper} onPress={() => setProvinceModalVisible(true)}>
             <Text style={styles.pickerText}>{province || '시/도 선택'}</Text>
@@ -135,7 +160,6 @@ const VolunteerPostListScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* 두 번째 줄 */}
         <View style={styles.filterRow}>
           <TouchableOpacity style={styles.datePickerButton} onPress={() => setShowStartPicker(true)}>
             <Text style={styles.datePickerText}>
@@ -150,7 +174,7 @@ const VolunteerPostListScreen = () => {
         </View>
       </View>
 
-      {/* 모달 - 시/도 */}
+      {/* 모달 시/도 */}
       <Modal transparent visible={provinceModalVisible} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setProvinceModalVisible(false)}>
           <View style={styles.modalOverlay} />
@@ -174,7 +198,7 @@ const VolunteerPostListScreen = () => {
         </View>
       </Modal>
 
-      {/* 모달 - 군/구 */}
+      {/* 모달 군/구 */}
       <Modal transparent visible={cityModalVisible} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setCityModalVisible(false)}>
           <View style={styles.modalOverlay} />
@@ -197,7 +221,7 @@ const VolunteerPostListScreen = () => {
         </View>
       </Modal>
 
-      {/* 모달 - 모집 현황 */}
+      {/* 모달 모집 현황 */}
       <Modal transparent visible={statusModalVisible} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setStatusModalVisible(false)}>
           <View style={styles.modalOverlay} />
@@ -301,9 +325,25 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 8, color: '#333' },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  title: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   subtext: { fontSize: 12, color: '#666' },
   capacity: { fontSize: 12, marginTop: 4 },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: 'white',
+  },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
   modalContainer: {
     position: 'absolute',

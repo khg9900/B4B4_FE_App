@@ -117,15 +117,18 @@ const LoginScreen = () => {
         autoCapitalize="none"
         placeholderTextColor="#999"
       />
+
+      {/* 로그인 버튼 */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>로그인</Text>
       </TouchableOpacity>
 
+      {/* 회원가입 버튼 (반전 스타일) */}
       <TouchableOpacity
-        style={styles.signUpLink}
+        style={[styles.buttonOutline, { marginTop: 12 }]}
         onPress={() => navigation.navigate('SignUp' as never)}
       >
-        <Text style={styles.signUpText}>회원가입</Text>
+        <Text style={styles.buttonOutlineText}>회원가입</Text>
       </TouchableOpacity>
     </View>
   );
@@ -140,7 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     marginBottom: 12,
-    color: '#000', // 입력 글씨 검은색
+    color: '#000',
   },
   button: {
     backgroundColor: '#f26522',
@@ -153,8 +156,20 @@ const styles = StyleSheet.create({
     height: 53,
   },
   buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  signUpLink: { marginTop: 10, alignItems: 'center' },
-  signUpText: { color: '#f26522', fontWeight: '600' },
+  buttonOutline: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#f26522',
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    height: 53,
+  },
+  buttonOutlineText: {
+    color: '#f26522',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });
 
 export default LoginScreen;
