@@ -1,12 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
-import { useCurrentLocation } from '../hooks/useCurrentLocation';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import KakaoMapView from '../components/KakaoMapComponent';
 import { shelterApi } from '../api/shelterApi';
 import { reportApi } from '../api/reportApi';
@@ -14,6 +7,7 @@ import type { ShelterDto, DisasterDto } from '../types/Map';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../../navigation/RootNavigator';
+import { useCurrentLocation } from '../hooks/useCurrentLocation';
 
 type Navigation = NativeStackNavigationProp<RootStackParamList, 'MainScreen'>;
 
@@ -49,9 +43,7 @@ const MainScreen = () => {
     }
   };
 
-  const goToReportScreen = () => {
-    navigation.navigate('ReportScreen');
-  };
+  const goToReportScreen = () => navigation.navigate('ReportScreen');
 
   if (loading || latitude === null || longitude === null) {
     return (
@@ -68,7 +60,6 @@ const MainScreen = () => {
         현재 위치: {province} {city}
       </Text>
 
-      {/* 대피소 / 재난 정보 박스 버튼 */}
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.boxButton} onPress={fetchShelters}>
           <Text style={styles.boxButtonText}>대피소 보기</Text>
@@ -78,19 +69,12 @@ const MainScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* 지도 */}
       <View style={styles.mapContainer}>
-        <KakaoMapView
-          latitude={latitude}
-          longitude={longitude}
-          shelters={shelters}
-          disasters={disasters}
-        />
+        <KakaoMapView latitude={latitude} longitude={longitude} shelters={shelters} disasters={disasters} />
       </View>
 
-      {/* 신고하기 버튼 */}
       <View style={styles.reportButtonContainer}>
-        <TouchableOpacity onPress={goToReportScreen} style={styles.reportBoxButton}>
+        <TouchableOpacity style={styles.reportBoxButton} onPress={goToReportScreen}>
           <Text style={styles.reportBoxButtonText}>신고하기</Text>
         </TouchableOpacity>
       </View>
