@@ -1,6 +1,6 @@
+// src/screens/UserParticipationScreen.tsx
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, Alert } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { volunteerParticipantApi } from '../api/VolunteerApi';
 import type { VolunteerParticipationResponse } from '../types/Participation';
 import styles from '../styles/UserParticipationStyles';
@@ -8,13 +8,15 @@ import styles from '../styles/UserParticipationStyles';
 import ParticipationCard from '../components/ParticipationCard';
 import StatusFilter from '../components/StatusFilter';
 import DateRangePicker from '../components/DateRangePicker';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../../navigation/types';
 
 // 로컬 Date → KST ISO 문자열 변환
 const formatAsKSTISOString = (date: Date): string => {
   const kstOffset = 9 * 60;
   const utc = date.getTime() + date.getTimezoneOffset() * 60000;
   const kstDate = new Date(utc + kstOffset * 60000);
-
   return kstDate.toISOString().slice(0, 19);
 };
 
@@ -23,6 +25,8 @@ const UserParticipationScreen = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
+
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   useEffect(() => {
     fetchMyParticipations();
@@ -44,29 +48,46 @@ const UserParticipationScreen = () => {
 
   const handleCancel = async (participantId: number) => {
     try {
+      // 화면에서 즉시 상태 변경
       setParticipations((prev) =>
         prev.map((p) =>
           p.participantId === participantId ? { ...p, status: 'CANCELLED' } : p
         )
       );
+
       await volunteerParticipantApi.cancelParticipation(participantId);
       Alert.alert('알림', '참가가 취소되었습니다.');
     } catch (error: any) {
       Alert.alert('오류', error.response?.data?.message || '참가 취소 중 문제가 발생했습니다.');
-      fetchMyParticipations();
+      fetchMyParticipations(); // 롤백
     }
   };
 
   return (
     <View style={styles.container}>
+      {/* 상태 필터 */}
       <StatusFilter value={statusFilter} onChange={setStatusFilter} />
-      <DateRangePicker startTime={startTime} endTime={endTime} onChangeStart={setStartTime} onChangeEnd={setEndTime} />
 
+      {/* 날짜 범위 선택 */}
+      <DateRangePicker
+        startTime={startTime}
+        endTime={endTime}
+        onChangeStart={setStartTime}
+        onChangeEnd={setEndTime}
+      />
+
+      {/* 참가 목록 */}
       <FlatList
         data={participations}
         keyExtractor={(item) => item.participantId.toString()}
         renderItem={({ item }) => (
-          <ParticipationCard item={item} onCancel={handleCancel} />
+          <ParticipationCard
+            item={item}
+            onCancel={handleCancel}
+            onPress={() =>
+              navigation.navigate('PostDetail', { postId: item.postId })
+            }
+          />
         )}
         contentContainerStyle={styles.listContainer}
       />
