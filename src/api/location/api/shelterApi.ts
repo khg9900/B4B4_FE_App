@@ -5,7 +5,7 @@ export const shelterApi = {
   async getNearbyShelters(
     latitude: number,
     longitude: number,
-    radiusMeter: number = 3000
+    radiusMeter: number = 10000
   ): Promise<ShelterDto[]> {
 
     const res = await axiosInstance.get('/shelters', {
