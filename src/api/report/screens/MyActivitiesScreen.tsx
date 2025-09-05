@@ -38,7 +38,7 @@ export default function MyActivitiesScreen() {
         style={styles.button}
         onPress={() => navigation.navigate('UserParticipation' as never)}
       >
-        <Text style={styles.buttonText}>참가자</Text>
+        <Text style={styles.buttonText}>봉사활동 신청 내역</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.logoutbutton} onPress={handleLogout}>
