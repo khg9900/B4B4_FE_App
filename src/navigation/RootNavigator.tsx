@@ -32,6 +32,7 @@ export type RootStackParamList = {
   Alert: undefined;
   MainScreen: undefined;
   UserParticipation: undefined;
+  VolunteerPostDetail: { postId: number };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

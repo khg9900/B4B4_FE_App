@@ -17,7 +17,7 @@ import { requestPushPermission } from '../../alert/fcm/fcmPermissions';
 import { getFcmToken } from '../../alert/fcm/fcmTokenManager';
 import { sendDeviceInfoToServer } from '../../alert/fcm/sendDeviceInfo';
 import { jwtDecode } from 'jwt-decode';
-import { startAllServices} from '../../location/hooks/startLocationService';
+import { startAllServices } from '../../location/hooks/startLocationService';
 
 interface DecodedToken {
   id: number;
@@ -40,7 +40,7 @@ const LoginScreen = () => {
         const savedToken = await AsyncStorage.getItem('accessToken');
         if (savedToken) {
           setJwtToken(savedToken);
-              startAllServices(); // 위치 전송 및 추적 서비스 시작
+          startAllServices();
 
           const permissionGranted = await requestPushPermission();
           if (permissionGranted) {
@@ -85,8 +85,7 @@ const LoginScreen = () => {
         }
       }
 
-      startAllServices(); // 위치 전송 및 추적 서비스 시작
-
+      startAllServices();
       Alert.alert('로그인 성공');
 
       if (role === 'IND') navigation.navigate('MainScreen' as never);
@@ -107,6 +106,7 @@ const LoginScreen = () => {
         value={form.email}
         onChangeText={text => setForm({ ...form, email: text })}
         autoCapitalize="none"
+        placeholderTextColor="#999"
       />
       <TextInput
         placeholder="비밀번호"
@@ -115,16 +115,20 @@ const LoginScreen = () => {
         value={form.password}
         onChangeText={text => setForm({ ...form, password: text })}
         autoCapitalize="none"
+        placeholderTextColor="#999"
       />
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>로그인</Text>
+
+      {/* 로그인 버튼 */}
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>로그인</Text>
       </TouchableOpacity>
 
+      {/* 회원가입 버튼 (반전 스타일) */}
       <TouchableOpacity
-        style={styles.signUpLink}
+        style={[styles.buttonOutline, { marginTop: 12 }]}
         onPress={() => navigation.navigate('SignUp' as never)}
       >
-        <Text style={styles.signUpText}>회원가입</Text>
+        <Text style={styles.buttonOutlineText}>회원가입</Text>
       </TouchableOpacity>
     </View>
   );
@@ -139,18 +143,33 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     marginBottom: 12,
+    color: '#000',
   },
-  loginButton: {
+  button: {
     backgroundColor: '#f26522',
+    borderWidth: 1,
+    borderColor: '#fff',
     paddingVertical: 12,
     borderRadius: 6,
     alignItems: 'center',
     marginTop: 10,
     height: 53,
   },
-  loginButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  signUpLink: { marginTop: 10, alignItems: 'center' },
-  signUpText: { color: '#f26522', fontWeight: '600' },
+  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  buttonOutline: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#f26522',
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    height: 53,
+  },
+  buttonOutlineText: {
+    color: '#f26522',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });
 
 export default LoginScreen;

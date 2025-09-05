@@ -6,6 +6,7 @@ import type {
   PostTeamsResponse,
   SliceResponse,
   PostFilterRequest,
+  PostsTotalResponse,
   TeamStatus,
 } from '../types/Post';
 
@@ -15,7 +16,7 @@ export const volunteerApi = {
     filter: PostFilterRequest = {},
     page: number = 0,
     size: number = 10
-  ): Promise<SliceResponse<PostsResponse>> => {
+  ): Promise<SliceResponse<PostsTotalResponse>> => {
     const params = { ...filter, page, size };
     const response = await axiosInstance.get('/post', { params });
     return response.data.payload;
