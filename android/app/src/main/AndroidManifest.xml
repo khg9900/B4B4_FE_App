@@ -53,7 +53,7 @@
             android:name=".service.ForegroundLocationService"
             android:enabled="true"
             android:exported="true"
-            android:foregroundServiceType="location|dataSync" />
+            android:foregroundServiceType="location" />
 
         <!-- 메인 액티비티 -->
         <activity
