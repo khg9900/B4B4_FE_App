@@ -1,20 +1,13 @@
 // 📁 src/api/axiosInstance.ts
 import axios from 'axios';
-import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ✅ 환경별 baseURL 정의
-const emulatorURL = 'http://10.0.2.2:8080/api'; // Android 에뮬레이터용
-const localIP = '192.168.0.12';                // PC 로컬 IP
-const localURL = `http://${localIP}:8080/api`;
-const productionURL = 'http://54.180.32.246:8080/api'; // ✅ EC2 서버
-
-// ✅ 현재는 무조건 EC2 서버에 요청 (에러 회피용)
-const baseURL = localURL;
+// ✅ 환경별 baseURL
+const localIP = '192.168.0.12';
+const baseURL = `http://${localIP}:8080/api`;
 
 console.log('🌐 [Axios] BaseURL:', baseURL);
 
-// Axios 인스턴스 생성
 const axiosInstance = axios.create({
   baseURL,
   withCredentials: true,
@@ -23,12 +16,16 @@ const axiosInstance = axios.create({
   },
 });
 
-// 요청 인터셉터: accessToken 자동 삽입
+// ----------------------
+// 요청 인터셉터
+// ----------------------
 axiosInstance.interceptors.request.use(async (config) => {
   try {
-    const token = await AsyncStorage.getItem('accessToken');
+    const token = (await AsyncStorage.getItem('accessToken'))?.trim();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete config.headers.Authorization; // 토큰 없으면 제거
     }
   } catch (e) {
     console.warn('⚠️ [Axios] accessToken 불러오기 실패:', e);
@@ -36,7 +33,9 @@ axiosInstance.interceptors.request.use(async (config) => {
   return config;
 });
 
-// 응답 인터셉터: accessToken 만료 시 refreshToken으로 재발급 시도
+// ----------------------
+// 응답 인터셉터
+// ----------------------
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -46,22 +45,37 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        const refreshToken = (await AsyncStorage.getItem('refreshToken'))?.trim();
         if (!refreshToken) throw new Error('refreshToken 없음');
 
-        const res = await axios.post(`${baseURL}/auth/reissue`, { refreshToken });
-        const newAccessToken = res.data?.payload?.accessToken;
-        if (!newAccessToken) throw new Error('accessToken 재발급 실패');
+        // 🔹 refreshToken으로 accessToken 재발급
+        const res = await axios.post(
+          `${baseURL}/auth/reissue`,
+          { refreshToken },
+          { headers: { 'Content-Type': 'application/json' } } // Authorization 제거
+        );
 
-        await AsyncStorage.setItem('accessToken', newAccessToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        const newAccessToken = res.data?.payload?.accessToken;
+        const newRefreshToken = res.data?.payload?.refreshToken;
+
+        if (!newAccessToken || !newRefreshToken) throw new Error('토큰 재발급 실패');
+
+        // AsyncStorage 업데이트
+        await AsyncStorage.multiSet([
+          ['accessToken', newAccessToken],
+          ['refreshToken', newRefreshToken],
+        ]);
 
         console.log('🔄 [Axios] accessToken 재발급 성공');
-        return axiosInstance(originalRequest); // 원래 요청 재시도
+
+        // 원래 요청 헤더 업데이트 후 재시도
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return axiosInstance(originalRequest);
       } catch (reissueError) {
         console.error('🔴 [Axios] 토큰 재발급 실패:', reissueError);
         await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
-        // TODO: 로그인 화면으로 이동 처리 필요 시 여기에 작성
+        // 필요 시 앱 내 로그아웃 처리
+        // 예: navigation.reset({ routes: [{ name: 'Login' }] })
       }
     }
 

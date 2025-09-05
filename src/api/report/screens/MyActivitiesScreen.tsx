@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import axiosInstance from '../../global/api/axiosInstance';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {stopForegroundService } from '../../location/hooks/startLocationService';
 
 export default function MyActivitiesScreen() {
   const navigation = useNavigation();
@@ -12,6 +13,7 @@ export default function MyActivitiesScreen() {
       await axiosInstance.post('/auth/logout');
       await AsyncStorage.removeItem('accessToken');
       await AsyncStorage.removeItem('refreshToken');
+      stopForegroundService();
       Alert.alert('로그아웃 완료');
       navigation.reset({
         index: 0,
