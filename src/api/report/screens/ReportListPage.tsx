@@ -10,16 +10,34 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { fetchMyReports, ReportFilter } from '../api/myReportApi';
+import { DisasterType, disasterTypeNames } from '../types/disasterTypes';
 
-// ---- 브랜드 컬러(웹과 통일) ----
 const ORANGE = '#ff7c33';
 const ORANGE_DARK = '#ff6a14';
-const ORANGE_BG = '#fff5ec';
 const BORDER = '#E6E8EB';
-const MUTED = '#667085';
+const TEXT_DARK = '#111827';
+const TEXT_MUTED = '#667085';
+
+// 접수 상태 타입 + 한글 매핑
+type ReportStatus = 'PENDING' | 'RECEIVED' | 'CLOSED';
+const REPORT_STATUS_KO: Record<ReportStatus, string> = {
+  PENDING: '접수 대기',
+  RECEIVED: '접수 완료',
+  CLOSED:  '상황 종료',
+};
+
+const STATUS_ITEMS: Array<{ label: string; value: ReportStatus | undefined }> = [
+  { label: '전체', value: undefined },
+  ...(['PENDING', 'RECEIVED', 'CLOSED'] as const).map(s => ({
+    label: REPORT_STATUS_KO[s],
+    value: s,
+  })),
+];
 
 export default function ReportListPage() {
   const [reports, setReports] = useState<any[]>([]);
@@ -28,12 +46,14 @@ export default function ReportListPage() {
   const [hasNext, setHasNext] = useState(false);
   const [page, setPage] = useState(0);
 
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<ReportStatus | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<'DESC' | 'ASC'>('DESC');
 
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [showPicker, setShowPicker] = useState<'start' | 'end' | undefined>(undefined);
+
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
 
   const loadReports = async (pageNum: number, reset = true) => {
     try {
@@ -47,7 +67,6 @@ export default function ReportListPage() {
         sort: sortParam,
       };
 
-      // 날짜: 하루 전체 범위
       if (startDate) {
         const y = startDate.getFullYear();
         const m = String(startDate.getMonth() + 1).padStart(2, '0');
@@ -63,7 +82,7 @@ export default function ReportListPage() {
 
       const { content, last } = await fetchMyReports(filter);
       if (reset) setReports(content);
-      else setReports((prev) => [...prev, ...content]);
+      else setReports(prev => [...prev, ...content]);
 
       setHasNext(!last);
       setPage(pageNum);
@@ -93,12 +112,22 @@ export default function ReportListPage() {
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   };
 
+  const currentStatusLabel =
+    STATUS_ITEMS.find(i => i.value === statusFilter)?.label ?? '전체';
+
   const onChangeDate = (_: any, selected?: Date) => {
-    const who = showPicker; // 현재 어떤 피커였는지 저장
+    const who = showPicker;
     setShowPicker(undefined);
     if (!selected) return;
     if (who === 'start') setStartDate(selected);
     if (who === 'end') setEndDate(selected);
+  };
+
+  const resetAll = () => {
+    setStatusFilter(undefined);
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setSortOrder('DESC');
   };
 
   if (loading && !refreshing) {
@@ -110,74 +139,97 @@ export default function ReportListPage() {
     );
   }
 
-  // 상단 필터 헤더 (웹 느낌 칩 UI)
-  const FilterHeader = () => (
+  const Header = () => (
     <View style={styles.headerWrap}>
-      {/* 상단 아이콘/타이틀 대체: 타이틀만 */}
-      <Text style={styles.titleHeader}>신고목록</Text>
 
-      {/* 상태 칩 */}
-      <View style={styles.chipRow}>
-        {[
-          { label: '전체', value: undefined },
-          { label: '대기', value: 'PENDING' },
-          { label: '확인', value: 'RECEIVED' },
-          { label: '완료', value: 'CLOSED' },
-        ].map((o) => {
-          const active = statusFilter === o.value || (o.value === undefined && statusFilter === undefined);
-          return (
+      {/* 1) 접수 상태 */}
+      <View style={styles.filterLine}>
+        <Text style={styles.filterLabel}>접수 상태</Text>
+        <View style={styles.filterValueRow}>
+          <TouchableOpacity
+            style={[styles.outlinedBtn, { flex: 1 }]}
+            activeOpacity={0.85}
+            onPress={() => setStatusModalVisible(true)}
+          >
+            <Text style={styles.outlinedBtnText}>{currentStatusLabel}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 2) 신고 일자 */}
+      <View style={styles.filterLine}>
+        <Text style={styles.filterLabel}>신고 일자</Text>
+        <View style={[styles.filterValueRow, { gap: 8, alignItems: 'center' }]}>
+          <TouchableOpacity
+            style={[styles.outlinedBtn, { flex: 1 }]}
+            activeOpacity={0.85}
+            onPress={() => setShowPicker('start')}
+          >
+            <Text style={styles.outlinedBtnText}>
+              {startDate ? formatDateLabel(startDate.toISOString()) : '시작일'}
+            </Text>
+          </TouchableOpacity>
+          <Text style={{ color: TEXT_MUTED }}>~</Text>
+          <TouchableOpacity
+            style={[styles.outlinedBtn, { flex: 1 }]}
+            activeOpacity={0.85}
+            onPress={() => setShowPicker('end')}
+          >
+            <Text style={styles.outlinedBtnText}>
+              {endDate ? formatDateLabel(endDate.toISOString()) : '종료일'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 3) 초기화 라인 (오른쪽 정렬) */}
+      <View style={styles.resetLine}>
+        <TouchableOpacity style={styles.resetBtn} activeOpacity={0.9} onPress={resetAll}>
+          <Text style={styles.resetBtnText}>초기화</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 4) 정렬 라인 (다음 줄, 왼쪽 정렬) */}
+      <TouchableOpacity
+        style={styles.sortLine}
+        onPress={() => setSortOrder(prev => (prev === 'DESC' ? 'ASC' : 'DESC'))}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.sortText}>정렬: {sortOrder === 'DESC' ? '최신순' : '오래된순'}</Text>
+      </TouchableOpacity>
+
+      {/* 상태 선택 모달 */}
+      <Modal transparent visible={statusModalVisible} animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setStatusModalVisible(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+        <View style={styles.modalBox}>
+          {STATUS_ITEMS.map(opt => (
             <TouchableOpacity
-              key={o.label}
-              style={[styles.chip, active && styles.chipActive]}
-              activeOpacity={0.8}
-              onPress={() => setStatusFilter(o.value)}
+              key={opt.label}
+              style={styles.modalItem}
+              onPress={() => {
+                setStatusFilter(opt.value);
+                setStatusModalVisible(false);
+              }}
             >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>{o.label}</Text>
+              <Text
+                style={[
+                  styles.modalItemText,
+                  opt.value === statusFilter && { color: ORANGE, fontWeight: '700' },
+                ]}
+              >
+                {opt.label}
+              </Text>
             </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* 날짜 칩 */}
-      <View style={styles.chipRow}>
-        <TouchableOpacity style={[styles.chipGhost]} onPress={() => setShowPicker('start')} activeOpacity={0.8}>
-          <Text style={styles.chipGhostText}>
-            시작일 {startDate ? `· ${formatDateLabel(startDate.toISOString())}` : ''}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.chipGhost]} onPress={() => setShowPicker('end')} activeOpacity={0.8}>
-          <Text style={styles.chipGhostText}>
-            종료일 {endDate ? `· ${formatDateLabel(endDate.toISOString())}` : ''}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.chipDanger]}
-          onPress={() => {
-            setStartDate(undefined);
-            setEndDate(undefined);
-          }}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.chipDangerText}>날짜 초기화</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 정렬 토글 */}
-      <View style={styles.sortRow}>
-        <TouchableOpacity
-          style={styles.sortChip}
-          onPress={() => setSortOrder((prev) => (prev === 'DESC' ? 'ASC' : 'DESC'))}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.sortChipText}>정렬: {sortOrder === 'DESC' ? '최신순' : '오래된순'}</Text>
-        </TouchableOpacity>
-      </View>
+          ))}
+        </View>
+      </Modal>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      {/* DatePicker */}
       {showPicker && (
         <DateTimePicker
           value={(showPicker === 'start' ? startDate : endDate) || new Date()}
@@ -189,14 +241,18 @@ export default function ReportListPage() {
 
       <FlatList
         data={reports}
-        keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={FilterHeader}
+        keyExtractor={item => item.id.toString()}
+        ListHeaderComponent={Header}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.title}>{item.disasterType}</Text>
-            <Text style={styles.status}>{item.status}</Text>
-            <Text style={styles.date}>{formatDateLabel(item.createdAt)}</Text>
-            <Text style={styles.desc} numberOfLines={2}>
+            <Text style={styles.cardTitle}>
+              {disasterTypeNames[(item.disasterType as DisasterType)] ?? item.disasterType}
+            </Text>
+            <Text style={styles.cardStatus}>
+              {REPORT_STATUS_KO[(item.status as ReportStatus)] ?? item.status}
+            </Text>
+            <Text style={styles.cardDate}>{formatDateLabel(item.createdAt)}</Text>
+            <Text style={styles.cardDesc} numberOfLines={2}>
               {item.description}
             </Text>
           </View>
@@ -219,7 +275,6 @@ export default function ReportListPage() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
 
-  // 헤더(필터) 영역
   headerWrap: {
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -228,77 +283,69 @@ const styles = StyleSheet.create({
     borderBottomColor: BORDER,
   },
   titleHeader: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 12,
-    color: '#111827',
+    marginBottom: 30,
+    color: TEXT_DARK,
   },
 
-  chipRow: {
+  // 공통 라인
+  filterLine: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    gap: 10,
     marginBottom: 10,
   },
-
-  // 기본 칩(흰 배경, 회색 보더)
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: BORDER,
+  filterLabel: {
+    width: 78,
+    fontSize: 13,
+    fontWeight: '700',
+    color: TEXT_DARK,
   },
-  chipText: { fontSize: 13, color: '#1f2937' },
+  filterValueRow: { flex: 1, flexDirection: 'row' },
 
-  // 활성 칩(주황 강조)
-  chipActive: {
-    borderColor: ORANGE,
-    backgroundColor: '#fff',
-    shadowColor: ORANGE,
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 3,
-    elevation: 2,
+  // 초기화 라인 (오른쪽 정렬)
+  resetLine: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 2,
   },
-  chipTextActive: { color: ORANGE, fontWeight: '700' },
 
-  // 고스트 칩(날짜 선택)
-  chipGhost: {
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: ORANGE_BG,
+  // 정렬 라인 (다음 줄, 왼쪽 정렬)
+  sortLine: {
+    marginTop: 6,
+    marginBottom: 6,
+    alignSelf: 'flex-start',
+  },
+  sortText: { fontSize: 12, color: TEXT_MUTED, fontWeight: '600' },
+
+  // 버튼 스타일 (높이 축소)
+  outlinedBtn: {
     borderWidth: 1,
     borderColor: ORANGE,
-  },
-  chipGhostText: { fontSize: 12, color: ORANGE, textAlign: 'center' },
-
-  // 위험/리셋 칩
-  chipDanger: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: '#ffd3c7',
-    borderWidth: 1,
-    borderColor: ORANGE_DARK,
-  },
-  chipDangerText: { fontSize: 12, color: ORANGE_DARK, fontWeight: '700' },
-
-  // 정렬 칩(우측 정렬)
-  sortRow: { flexDirection: 'row', justifyContent: 'flex-end' },
-  sortChip: {
-    alignSelf: 'flex-end',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: BORDER,
+    borderRadius: 12,
+    paddingVertical: 6,     // ↓ 줄임
+    paddingHorizontal: 12,
+    minHeight: 36,          // ↓ 줄임
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  sortChipText: { fontSize: 12, color: MUTED },
+  outlinedBtnText: { color: ORANGE, fontSize: 12, fontWeight: '600' },
+
+  resetBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,     // ↓ 줄임
+    backgroundColor: ORANGE,
+    borderRadius: 12,
+    minHeight: 36,          // ↓ 줄임
+    minWidth: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resetBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 
   // 리스트/카드
   listContainer: { padding: 16, paddingBottom: 100 },
@@ -315,13 +362,33 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  title: { fontSize: 16, fontWeight: '800', color: '#111827' },
-  status: { fontSize: 13, marginVertical: 4, color: ORANGE_DARK, fontWeight: '600' },
-  date: { fontSize: 12, color: MUTED },
-  desc: { fontSize: 13, marginTop: 8, color: '#374151' },
+  cardTitle: { fontSize: 16, fontWeight: '800', color: TEXT_DARK },
+  cardStatus: { fontSize: 13, marginVertical: 4, color: ORANGE_DARK, fontWeight: '600' },
+  cardDate: { fontSize: 12, color: TEXT_MUTED },
+  cardDesc: { fontSize: 13, marginTop: 8, color: '#374151' },
 
   // 로딩/빈 상태
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 8, fontSize: 16 },
   empty: { paddingVertical: 40, alignItems: 'center' },
+
+  // 모달
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
+  modalBox: {
+    position: 'absolute',
+    top: 120,
+    left: 16,
+    right: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 6,
+  },
+  modalItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: BORDER,
+  },
+  modalItemText: { fontSize: 14, color: TEXT_DARK },
 });
