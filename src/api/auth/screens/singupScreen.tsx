@@ -3,13 +3,12 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   Alert,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { userApi } from '../api/userApi';
-import type { SignUpRequestDto, UserRole } from '../types/User';
+import type { SignUpRequestDto } from '../types/User';
 import { useNavigation } from '@react-navigation/native';
 
 const SignUpScreen = () => {
@@ -43,6 +42,7 @@ const SignUpScreen = () => {
         style={styles.input}
         value={form.email}
         onChangeText={(text) => setForm({ ...form, email: text })}
+        placeholderTextColor="#999"
       />
       <TextInput
         placeholder="비밀번호"
@@ -50,12 +50,14 @@ const SignUpScreen = () => {
         secureTextEntry
         value={form.password}
         onChangeText={(text) => setForm({ ...form, password: text })}
+        placeholderTextColor="#999"
       />
       <TextInput
         placeholder="이름"
         style={styles.input}
         value={form.name}
         onChangeText={(text) => setForm({ ...form, name: text })}
+        placeholderTextColor="#999"
       />
       <TextInput
         placeholder="전화번호"
@@ -63,8 +65,12 @@ const SignUpScreen = () => {
         keyboardType="phone-pad"
         value={form.phoneNumber}
         onChangeText={(text) => setForm({ ...form, phoneNumber: text })}
+        placeholderTextColor="#999"
       />
-      <Button title="회원가입" onPress={handleSubmit} />
+
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <Text style={styles.buttonText}>회원가입</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -78,7 +84,19 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     marginBottom: 12,
+    color: '#000', // 입력 글씨 검은색
   },
+  button: {
+    backgroundColor: '#f26522',
+    borderWidth: 1,
+    borderColor: '#fff',
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginTop: 10,
+    height: 53, // 로그인 버튼과 동일 크기
+  },
+  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });
 
 export default SignUpScreen;
