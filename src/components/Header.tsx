@@ -14,7 +14,7 @@ const Header = () => {
 
   return (
     <View style={[styles.header, { paddingTop: insets.top }]}>
-      <TouchableOpacity style={{ marginTop: -20 }}>
+      <TouchableOpacity style={{ marginTop: 0 }}>
         <Image
           source={require('../img/b4b4.png')}
           style={styles.icon}
@@ -23,7 +23,7 @@ const Header = () => {
 
       <View style={{ flex: 1 }} />
 
-      <TouchableOpacity style={{ marginTop: -12}} onPress={() => navigation.navigate('Alert' as never)} >
+      <TouchableOpacity style={{ marginTop: 12 }} onPress={() => navigation.navigate('Alert' as never)} >
         <Image
           source={require('../img/alertoff.png')}
           style={styles.icon}

@@ -64,7 +64,7 @@ const ReportScreen = () => {
       disasterType: selectedType,
       description,
       province,
-      city: city || '없음',
+      city: city || 'null',
       latitude,
       longitude,
       image: image
