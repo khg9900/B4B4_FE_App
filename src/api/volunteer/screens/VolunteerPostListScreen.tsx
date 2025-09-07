@@ -47,18 +47,6 @@ const VolunteerPostListScreen = () => {
 
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-<<<<<<< HEAD
-
-  const [availableProvinces, setAvailableProvinces] = useState<string[]>([]);
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
-
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
-  useEffect(() => {
-    fetchPosts(0, true);
-  }, [province, city, statusFilter, volunteerStartDate, volunteerEndDate]);
-
-=======
 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -73,7 +61,6 @@ const VolunteerPostListScreen = () => {
     fetchPosts(0, true);
   }, [province, city, statusFilter, volunteerStartDate, volunteerEndDate]);
 
->>>>>>> ab1db33902b5da17d606d3d01f338d60bd62315b
   const fetchPosts = async (pageNumber: number, reset = false) => {
     if (loading || (!hasMore && !reset)) return;
     setLoading(true);
@@ -89,16 +76,7 @@ const VolunteerPostListScreen = () => {
 
       const data = await volunteerApi.getPosts(filter, pageNumber, 10);
 
-<<<<<<< HEAD
-      const provinces = Array.from(new Set(data.content.map((p) => p.province).filter(Boolean)));
-      setAvailableProvinces(provinces.filter((p): p is string => typeof p === 'string'));
-      if (province) {
-        const cities = Array.from(new Set(data.content.filter((p) => p.province === province).map((p) => p.city))).filter((c): c is string => typeof c === 'string');
-        setAvailableCities(cities);
-      }
-=======
       // ✅ 옵션은 더 이상 응답에서 파생하지 않음(고정 모듈 사용)
->>>>>>> ab1db33902b5da17d606d3d01f338d60bd62315b
 
       const newPosts: VolunteerPostItem[] = data.content.map((p) => ({
         ...p,
@@ -171,11 +149,7 @@ const VolunteerPostListScreen = () => {
           <TouchableOpacity
             style={styles.pickerWrapper}
             onPress={() => province && setCityModalVisible(true)}
-<<<<<<< HEAD
-            disabled={!province}
-=======
             disabled={!province || availableCities.length === 0}
->>>>>>> ab1db33902b5da17d606d3d01f338d60bd62315b
           >
             <Text style={styles.pickerText}>{city || '군/구 선택'}</Text>
           </TouchableOpacity>
@@ -213,11 +187,7 @@ const VolunteerPostListScreen = () => {
                 style={styles.modalItem}
                 onPress={() => {
                   setProvince(p);
-<<<<<<< HEAD
-                  setCity(null);
-=======
                   setCity(null); // 시/도 바뀌면 군/구 초기화
->>>>>>> ab1db33902b5da17d606d3d01f338d60bd62315b
                   setProvinceModalVisible(false);
                 }}
               >

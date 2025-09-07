@@ -3,11 +3,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ✅ 환경별 baseURL
-<<<<<<< HEAD
 const localIP = '192.168.45.93';
-=======
-const localIP = '192.168.0.12';
->>>>>>> ab1db33902b5da17d606d3d01f338d60bd62315b
 const baseURL = `http://${localIP}:8080/api`;
 
 console.log('🌐 [Axios] BaseURL:', baseURL);

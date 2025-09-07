@@ -10,11 +10,7 @@ import com.google.gson.Gson
 
 object BackendApi {
     private const val TAG = "BackendApi"
-<<<<<<< HEAD
     private const val BASE_URL = "http://192.168.45.93:8080/api"
-=======
-    private const val BASE_URL = "http://192.168.0.12:8080/api"
->>>>>>> ab1db33902b5da17d606d3d01f338d60bd62315b
 
     private val client = OkHttpClient()
     private val gson = Gson()
