@@ -9,8 +9,8 @@ interface BaseAlert {
 
 export interface DisasterAlert extends BaseAlert {
   type: 'disaster';
-  si: string;
-  gu: string;
+  province: string;
+  city: string | null;
   disasterType: string;
   count: number;
 }
@@ -19,5 +19,5 @@ export interface VolunteerAlert extends BaseAlert {
   type: 'volunteer';
   title: string;
   placeName: string;
-  checkinStart: string;
+  volunteerDate: string;
 }
