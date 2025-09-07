@@ -1,8 +1,8 @@
-// 📁 src/alert/components/AlertItem.tsx
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { getRelativeTime, formatKoreanDate } from '../utils/dateUtils';
 import { Alert } from '../types';
+import { joinSpace } from '../utils/text';
 
 type Props = {
   alert: Alert;
@@ -11,28 +11,31 @@ type Props = {
 export const AlertItem = ({ alert }: Props) => {
   const renderContent = () => {
     if (alert.type === 'disaster') {
+      const place = joinSpace(alert.province, alert.city); // ← 단일 공백 합성 (""/null 자동 제거)
+
       return (
         <>
           <Text style={styles.alertTitle}>
-            [재난 알림] {alert.si} {alert.gu} {alert.disasterType} 발생 알림
+            {[`[재난 알림]`, place, `${alert.disasterType} 발생 알림`].join(' ')}
           </Text>
           <Text style={styles.alertText}>
-            {alert.si} {alert.gu}에서 {alert.disasterType} 신고가 {alert.count}건 이상 접수되었습니다.
+            {`${place}에서 ${alert.disasterType} 신고가 ${alert.count}건 이상 접수되었습니다.`}
           </Text>
         </>
       );
     }
 
+    // volunteer
     return (
       <>
         <Text style={styles.alertTitle}>
-          [봉사 알림] {alert.title} 변경 공지
+          {[`[봉사 알림]`, alert.title, '변경 공지'].join(' ')}
         </Text>
         <Text style={styles.alertText}>제목 : {alert.title}</Text>
         <Text style={styles.alertText}>장소 : {alert.placeName}</Text>
-        {alert.checkinStart && (
+        {alert.volunteerDate && (
           <Text style={styles.alertText}>
-            시간 : {formatKoreanDate(alert.checkinStart)}
+            시간 : {formatKoreanDate(alert.volunteerDate)}
           </Text>
         )}
       </>
