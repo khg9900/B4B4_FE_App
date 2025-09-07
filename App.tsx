@@ -8,7 +8,7 @@ import { requestPushPermission } from './src/api/alert/fcm/fcmPermissions';
 import { getFcmToken } from './src/api/alert/fcm/fcmTokenManager';
 import { displayLocalNotification } from './src/api/alert/utils/showLocalNotification';
 import { requestLocationPermission } from './src/api/global/utils/PermissionUtil';
-
+import { navigationRef } from './src/navigation/AppNavigation'; 
 
 
 const App = () => {
@@ -44,7 +44,7 @@ const App = () => {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <RootNavigator />
       </NavigationContainer>
     </SafeAreaProvider>

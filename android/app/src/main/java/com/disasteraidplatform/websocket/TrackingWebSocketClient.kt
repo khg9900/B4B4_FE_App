@@ -4,7 +4,7 @@ import com.disasteraidplatform.util.Logger
 import kotlinx.serialization.json.*
 import okhttp3.*
 
-class TrackingWebSocketClient(private val url: String) {
+class TrackingWebSocketClient(var url: String) { // val → var
 
     sealed class TrackingEvent {
         data class Ready(val volunteerId: String) : TrackingEvent()
@@ -56,6 +56,12 @@ class TrackingWebSocketClient(private val url: String) {
                 Logger.e("TrackingWS", "WebSocket 실패", t)
             }
         })
+    }
+
+    fun updateUrl(newUrl: String) {
+        url = newUrl
+        disconnect()
+        connect()
     }
 
     fun disconnect() {

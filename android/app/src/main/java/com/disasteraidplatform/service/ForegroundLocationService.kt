@@ -57,9 +57,26 @@ class ForegroundLocationService : Service() {
             }
         }
 
+        scope.launch {
+            ensureValidToken()
+            startWebSocket()
+            startSendingLoop()
+        }
+
         startLocationUpdates()
-        startWebSocket()
-        startSendingLoop()
+    }
+
+    private suspend fun ensureValidToken() {
+        val token = JwtManager.getToken()
+        if (token == null || JwtManager.isAccessTokenExpired(token)) {
+            val newToken = JwtManager.refreshTokenSync()
+            if (newToken == null) {
+                Logger.e("ForegroundLocationService", "토큰 갱신 실패, 서비스 종료")
+                stopSelf()
+            } else {
+                Logger.d("ForegroundLocationService", "토큰 갱신 성공")
+            }
+        }
     }
 
     private fun startLocationUpdates() {
@@ -74,11 +91,10 @@ class ForegroundLocationService : Service() {
 
     private fun startWebSocket() {
         val token = JwtManager.getToken() ?: return
-        val locationUrl = "ws://192.168.45.93:8080/api/location-tracking?token=$token"
-        val trackingUrl = "ws://192.168.45.93:8080/api/tracking?token=$token"
+        val locationUrl = "ws://192.168.25.177:8080/api/location-tracking?token=$token"
+        val trackingUrl = "ws://192.168.25.177:8080/api/tracking?token=$token"
 
         wsManager = WebSocketManager(locationUrl, trackingUrl)
-
         wsManager?.connectAll(
             onTrackingEvent = { event ->
                 when (event) {
@@ -87,7 +103,8 @@ class ForegroundLocationService : Service() {
                     is TrackingWebSocketClient.TrackingEvent.Ended -> showVolunteerNotification("출석 종료")
                     else -> {}
                 }
-            }
+            },
+            onReady = {}
         )
     }
 
@@ -102,7 +119,7 @@ class ForegroundLocationService : Service() {
                         val region = RegionSender(this@ForegroundLocationService)
                             .fetchRegion(location.longitude, location.latitude)
                         region?.let { r ->
-                            BackendApi.requestSync(
+                            BackendApi.requestSyncWithRefresh(
                                 url = "/location/region",
                                 method = "POST",
                                 body = BackendApi.createJsonRequestBody(mapOf(
@@ -152,12 +169,11 @@ class ForegroundLocationService : Service() {
         }
     }
 
-    /** 포그라운드 위치 추적용 알림 */
     private fun buildForegroundNotification(message: String): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Disaster Aid Platform")
-            .setContentText("📍 $message") // 이모지 추가
-            .setSmallIcon(R.drawable.b4b4) // 상태바 아이콘
+            .setContentText("📍 $message")
+            .setSmallIcon(R.drawable.b4b4)
             .setOngoing(true)
             .build()
     }
@@ -167,12 +183,11 @@ class ForegroundLocationService : Service() {
             .notify(NOTIFICATION_ID, buildForegroundNotification(message))
     }
 
-    /** 봉사 관련 알림 */
     private fun showVolunteerNotification(title: String, content: String = "") {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("❤️ $title") // 이모지 추가
+            .setContentTitle("❤️ $title")
             .setContentText(content)
-            .setSmallIcon(R.drawable.b4b4) // 상태바 아이콘
+            .setSmallIcon(R.drawable.b4b4)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
