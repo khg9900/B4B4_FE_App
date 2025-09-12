@@ -20,4 +20,5 @@ export interface VolunteerAlert extends BaseAlert {
   title: string;
   placeName: string;
   volunteerDate: string;
+  suptype: string; // '취소' or '변경'
 }

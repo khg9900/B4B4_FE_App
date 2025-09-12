@@ -4,7 +4,7 @@ import com.disasteraidplatform.util.Logger
 import kotlinx.serialization.json.*
 import okhttp3.*
 
-class TrackingWebSocketClient(var url: String) { // val → var
+class TrackingWebSocketClient(var url: String) {
 
     sealed class TrackingEvent {
         data class Ready(val volunteerId: String) : TrackingEvent()
@@ -15,15 +15,20 @@ class TrackingWebSocketClient(var url: String) { // val → var
 
     var volunteerId: String? = null
     var onEvent: ((TrackingEvent) -> Unit)? = null
+
     private var webSocket: WebSocket? = null
     private val client = OkHttpClient()
-    private var isConnected = false
+    private var connected = false
+
+    // ✅ 토큰 필드 추가
+    var token: String? = null
+        private set
 
     fun connect() {
         val request = Request.Builder().url(url).build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(ws: WebSocket, response: Response) {
-                isConnected = true
+                connected = true
                 Logger.d("TrackingWS", "✅ Connected")
             }
 
@@ -48,14 +53,24 @@ class TrackingWebSocketClient(var url: String) { // val → var
             }
 
             override fun onClosed(ws: WebSocket, code: Int, reason: String) {
-                isConnected = false
+                connected = false
             }
 
             override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
-                isConnected = false
+                connected = false
                 Logger.e("TrackingWS", "WebSocket 실패", t)
             }
         })
+    }
+
+    fun isConnected(): Boolean = connected
+
+    // ✅ 토큰 갱신 시 재연결
+    fun reconnect(newToken: String) {
+        token = newToken
+        url = url.substringBefore("?token=") + "?token=$newToken"
+        disconnect()
+        connect()
     }
 
     fun updateUrl(newUrl: String) {
@@ -67,6 +82,6 @@ class TrackingWebSocketClient(var url: String) { // val → var
     fun disconnect() {
         webSocket?.close(1000, "Closing")
         webSocket = null
-        isConnected = false
+        connected = false
     }
 }
