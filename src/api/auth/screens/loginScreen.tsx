@@ -11,13 +11,14 @@ import {
 import { userApi } from '../api/userApi';
 import type { LoginRequestDto } from '../types/User';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setJwtToken } from '../../../nativeModules/JwtModule';
+import { NativeModules } from 'react-native';
 import { requestPushPermission } from '../../alert/fcm/fcmPermissions';
 import { getFcmToken } from '../../alert/fcm/fcmTokenManager';
 import { sendDeviceInfoToServer } from '../../alert/fcm/sendDeviceInfo';
 import { jwtDecode } from 'jwt-decode';
 import { startAllServices } from '../../location/hooks/startLocationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axiosInstance from '../../global/api/axiosInstance';
 
 interface DecodedToken {
   id: number;
@@ -27,28 +28,35 @@ interface DecodedToken {
   iat: number;
 }
 
+const { JwtModule } = NativeModules;
+
 const LoginScreen = () => {
   const navigation = useNavigation();
-  const [form, setForm] = useState<LoginRequestDto>({
-    email: '',
-    password: '',
-  });
+  const [form, setForm] = useState<LoginRequestDto>({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
 
+  // 자동 로그인 시도
   useEffect(() => {
     const tryAutoLogin = async () => {
       try {
-        const savedToken = await AsyncStorage.getItem('accessToken');
-        if (savedToken) {
-          setJwtToken(savedToken);
-          startAllServices();
 
-          const permissionGranted = await requestPushPermission();
-          if (permissionGranted) {
-            const token = await getFcmToken();
-            if (token) await sendDeviceInfoToServer(token);
-          }
-          navigation.navigate('MainScreen' as never);
+        const accessToken = await AsyncStorage.getItem('accessToken');
+        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        if (!accessToken) return;
+
+        // 토큰 세팅
+        JwtModule.setToken(accessToken, refreshToken);
+        axiosInstance.defaults.headers.Authorization = `Bearer ${accessToken}`;
+
+        startAllServices();
+
+        const permissionGranted = await requestPushPermission();
+        if (permissionGranted) {
+          const fcmToken = await getFcmToken();
+          if (fcmToken) await sendDeviceInfoToServer(fcmToken);
         }
+
+        navigation.navigate('MainScreen' as never);
       } catch (e) {
         console.log('자동 로그인 실패:', e);
       }
@@ -57,43 +65,38 @@ const LoginScreen = () => {
   }, [navigation]);
 
   const handleLogin = async () => {
+    setLoading(true);
     try {
-      const response = await userApi.login(form);
-      const accessToken = response.data?.payload?.accessToken;
-      const refreshToken = response.data?.payload?.refreshToken;
+      // login 함수 안에서 토큰 저장과 axios 헤더 세팅까지 처리됨
+      const payload = await userApi.login(form);
 
-      if (!accessToken || !refreshToken) {
-        throw new Error('토큰이 누락되었습니다.');
-      }
-
-      await AsyncStorage.multiSet([
-        ['accessToken', accessToken],
-        ['refreshToken', refreshToken],
-      ]);
-
-      setJwtToken(accessToken);
-
-      const decoded: DecodedToken = jwtDecode(accessToken);
+      // 토큰 디코딩
+      const decoded: DecodedToken = jwtDecode(payload.accessToken);
       const role = decoded.role;
 
+      // FCM 권한 & 토큰 전송
       const permissionGranted = await requestPushPermission();
       if (permissionGranted) {
-        const token = await getFcmToken();
-        if (token) {
-          const success = await sendDeviceInfoToServer(token);
+        const fcmToken = await getFcmToken();
+        if (fcmToken) {
+          const success = await sendDeviceInfoToServer(fcmToken);
           if (!success) console.warn('[FCM] 서버 전송 실패');
         }
       }
 
+      JwtModule.setToken(payload.accessToken, payload.refreshToken);
       startAllServices();
       Alert.alert('로그인 성공');
 
+      // 역할별 화면 이동
       if (role === 'IND') navigation.navigate('MainScreen' as never);
       else if (role === 'GOV') navigation.navigate('Dashboard' as never);
       else navigation.navigate('MainScreen' as never);
-    } catch (error) {
-      console.error('❌ 로그인 실패:', error);
+    } catch (error: any) {
+      console.error('❌ 로그인 실패:', error.response?.data || error.message || JSON.stringify(error));
       Alert.alert('로그인 실패', '이메일 또는 비밀번호를 확인해주세요');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,12 +121,14 @@ const LoginScreen = () => {
         placeholderTextColor="#999"
       />
 
-      {/* 로그인 버튼 */}
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>로그인</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>{loading ? '로그인 중...' : '로그인'}</Text>
       </TouchableOpacity>
 
-      {/* 회원가입 버튼 (반전 스타일) */}
       <TouchableOpacity
         style={[styles.buttonOutline, { marginTop: 12 }]}
         onPress={() => navigation.navigate('SignUp' as never)}
