@@ -4,7 +4,7 @@ import com.disasteraidplatform.util.Logger
 import kotlinx.serialization.json.*
 import okhttp3.*
 
-class LocationWebSocketClient(private val url: String) {
+class LocationWebSocketClient(var url: String) { // val → var
 
     var volunteerId: String? = null
     private var webSocket: WebSocket? = null
@@ -28,6 +28,12 @@ class LocationWebSocketClient(private val url: String) {
                 isConnected = false
             }
         })
+    }
+
+    fun updateUrl(newUrl: String) {
+        url = newUrl
+        disconnect()
+        connect()
     }
 
     fun sendLocation(volunteerId: String, lat: Double, lng: Double) {
