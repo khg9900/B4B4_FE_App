@@ -4,7 +4,6 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import android.content.Context
 
 class JwtModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     override fun getName(): String = "JwtModule"
@@ -27,11 +26,5 @@ class JwtModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
         val newToken = JwtManager.refreshTokenSync()
         if (newToken != null) promise.resolve(newToken)
         else promise.reject("REFRESH_FAILED", "Failed to refresh access token.")
-    }
-    @ReactMethod
-    fun clearTokens(promise: Promise) {
-        val prefs = reactApplicationContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        prefs.edit().remove("accessToken").remove("refreshToken").apply()
-        promise.resolve(true)
     }
 }
