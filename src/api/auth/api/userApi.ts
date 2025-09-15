@@ -1,14 +1,11 @@
-import axiosInstance, { saveTokens, clearTokens } from '../../global/api/axiosInstance';
+import axiosInstance, { clearTokens, saveTokens } from '../../global/api/axiosInstance';
 import type { SignUpRequestDto, LoginRequestDto } from '../types/User';
+import {navigate}  from '../../../navigation/AppNavigation';
 
-/**
- * userApi
- */
 export const userApi = {
   // 회원가입
   signUp: async (data: SignUpRequestDto) => {
     try {
-
       await clearTokens();
       delete axiosInstance.defaults.headers.Authorization;
 
@@ -23,9 +20,9 @@ export const userApi = {
   // 로그인
   login: async (data: LoginRequestDto) => {
     try {
-
-       await clearTokens();
+      await clearTokens();
       delete axiosInstance.defaults.headers.Authorization;
+
       const response = await axiosInstance.post('/auth/login', data);
       const payload = response.data?.payload;
 
@@ -33,8 +30,10 @@ export const userApi = {
         throw new Error('로그인 토큰 누락');
       }
 
-      // 토큰 저장 및 axios 헤더 세팅
+      // NativeModule + AsyncStorage에 토큰 저장
       await saveTokens(payload.accessToken, payload.refreshToken);
+
+      // axios 기본 헤더 세팅
       axiosInstance.defaults.headers.Authorization = `Bearer ${payload.accessToken}`;
 
       return payload; // { accessToken, refreshToken }
@@ -61,6 +60,7 @@ export const userApi = {
       await clearTokens();
       await axiosInstance.post('/auth/logout');
       delete axiosInstance.defaults.headers.Authorization;
+      navigate('Login');
     } catch (error: any) {
       console.error('📌 logout 에러:', error.message);
       throw error;

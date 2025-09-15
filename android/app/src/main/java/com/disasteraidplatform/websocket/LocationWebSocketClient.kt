@@ -4,30 +4,45 @@ import com.disasteraidplatform.util.Logger
 import kotlinx.serialization.json.*
 import okhttp3.*
 
-class LocationWebSocketClient(var url: String) { // val → var
+class LocationWebSocketClient(var url: String) {
 
-    var volunteerId: String? = null
     private var webSocket: WebSocket? = null
     private val client = OkHttpClient()
-    private var isConnected = false
+    private var connected = false
+
+    var token: String? = null
+        private set
+
+    // --- 마지막 위치 저장 ---
+    private var lastLocation: Pair<Double, Double>? = null
+    fun getLastLocation(): Pair<Double, Double>? = lastLocation
 
     fun connect() {
         val request = Request.Builder().url(url).build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(ws: WebSocket, response: Response) {
-                isConnected = true
+                connected = true
                 Logger.d("LocationWS", "✅ Connected")
             }
 
             override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
-                isConnected = false
+                connected = false
                 Logger.e("LocationWS", "WebSocket 실패", t)
             }
 
             override fun onClosed(ws: WebSocket, code: Int, reason: String) {
-                isConnected = false
+                connected = false
             }
         })
+    }
+
+    fun isConnected(): Boolean = connected
+
+    fun reconnect(newToken: String) {
+        token = newToken
+        url = url.substringBefore("?token=") + "?token=$newToken"
+        disconnect()
+        connect()
     }
 
     fun updateUrl(newUrl: String) {
@@ -37,15 +52,18 @@ class LocationWebSocketClient(var url: String) { // val → var
     }
 
     fun sendLocation(volunteerId: String, lat: Double, lng: Double) {
-        if (!isConnected) {
+        if (!connected) {
             Logger.w("LocationWS", "Send failed: WebSocket not connected")
             return
         }
 
+        // --- 마지막 위치 저장 ---
+        lastLocation = Pair(lat, lng)
+
         val msg = buildJsonObject {
             put("type", "location_update")
             putJsonObject("data") {
-                put("volunteerId", volunteerId)
+                put("volunteerId", volunteerId.toLong())
                 put("latitude", lat)
                 put("longitude", lng)
             }
@@ -57,6 +75,6 @@ class LocationWebSocketClient(var url: String) { // val → var
     fun disconnect() {
         webSocket?.close(1000, "Closing")
         webSocket = null
-        isConnected = false
+        connected = false
     }
 }
