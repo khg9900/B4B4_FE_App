@@ -1,13 +1,69 @@
-// src/api/userApi.ts
-import axiosInstance from '../../global/api/axiosInstance';
+import axiosInstance, { clearTokens, saveTokens } from '../../global/api/axiosInstance';
 import type { SignUpRequestDto, LoginRequestDto } from '../types/User';
+import {navigate}  from '../../../navigation/AppNavigation';
 
 export const userApi = {
-  signUp: (data: SignUpRequestDto) => axiosInstance.post('/auth/signup', data),
-  login: (data: LoginRequestDto) => axiosInstance.post('/auth/login', data),
-};
+  // 회원가입
+  signUp: async (data: SignUpRequestDto) => {
+    try {
+      await clearTokens();
+      delete axiosInstance.defaults.headers.Authorization;
 
-export const fetchMyInfo = async () => {
-  const response = await axiosInstance.get('/user/me'); 
-  return response.data;
+      const response = await axiosInstance.post('/auth/signup', data);
+      return response.data;
+    } catch (error: any) {
+      console.error('📌 signUp 에러:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // 로그인
+  login: async (data: LoginRequestDto) => {
+    try {
+      await clearTokens();
+      delete axiosInstance.defaults.headers.Authorization;
+
+      const response = await axiosInstance.post('/auth/login', data);
+      const payload = response.data?.payload;
+
+      if (!payload?.accessToken || !payload?.refreshToken) {
+        throw new Error('로그인 토큰 누락');
+      }
+
+      // NativeModule + AsyncStorage에 토큰 저장
+      await saveTokens(payload.accessToken, payload.refreshToken);
+
+      // axios 기본 헤더 세팅
+      axiosInstance.defaults.headers.Authorization = `Bearer ${payload.accessToken}`;
+
+      return payload; // { accessToken, refreshToken }
+    } catch (error: any) {
+      console.error('📌 login 에러:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // 내 정보 조회
+  fetchMyInfo: async () => {
+    try {
+      const response = await axiosInstance.get('/user/me');
+      return response.data;
+    } catch (error: any) {
+      console.error('📌 fetchMyInfo 에러:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // 로그아웃
+  logout: async () => {
+    try {
+      await clearTokens();
+      await axiosInstance.post('/auth/logout');
+      delete axiosInstance.defaults.headers.Authorization;
+      navigate('Login');
+    } catch (error: any) {
+      console.error('📌 logout 에러:', error.message);
+      throw error;
+    }
+  },
 };

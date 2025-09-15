@@ -11,7 +11,7 @@ type Props = {
 export const AlertItem = ({ alert }: Props) => {
   const renderContent = () => {
     if (alert.type === 'disaster') {
-      const place = joinSpace(alert.province, alert.city); // ← 단일 공백 합성 (""/null 자동 제거)
+      const place = joinSpace(alert.province, alert.city);
 
       return (
         <>
@@ -26,10 +26,13 @@ export const AlertItem = ({ alert }: Props) => {
     }
 
     // volunteer
+    const isCancel = alert.suptype === 'cancel';
+    const noticeType = isCancel ? '취소 공지' : '변경 공지';
+
     return (
       <>
         <Text style={styles.alertTitle}>
-          {[`[봉사 알림]`, alert.title, '변경 공지'].join(' ')}
+          {[`[봉사 알림]`, alert.title, noticeType].join(' ')}
         </Text>
         <Text style={styles.alertText}>제목 : {alert.title}</Text>
         <Text style={styles.alertText}>장소 : {alert.placeName}</Text>
