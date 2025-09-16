@@ -19,6 +19,8 @@ import { jwtDecode } from 'jwt-decode';
 import { startAllServices } from '../../location/hooks/startLocationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosInstance from '../../global/api/axiosInstance';
+import { authState } from '../../global/utils/authState';
+import { showErrorAlert, ErrorCode } from '../../global/utils/showErrorAlert';
 
 interface DecodedToken {
   id: number;
@@ -38,17 +40,33 @@ const LoginScreen = () => {
   // 자동 로그인 시도
   useEffect(() => {
     const tryAutoLogin = async () => {
-      try {
+      authState.isAutoLoggingIn = true;
 
+      try {
         const accessToken = await AsyncStorage.getItem('accessToken');
         const refreshToken = await AsyncStorage.getItem('refreshToken');
         if (!accessToken) return;
 
+        // 토큰 만료 여부 체크
+        try {
+          const decoded: DecodedToken = jwtDecode(accessToken);
+          const isExpired = decoded.exp * 1000 <= Date.now();
+          if (isExpired) {
+            console.log('자동로그인: accessToken 만료 → 중단');
+            await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+            return;
+          }
+        } catch (e) {
+          console.log('토큰 디코드 실패:', e);
+          await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+          return;
+        }
+
         // 토큰 세팅
         JwtModule.setToken(accessToken, refreshToken);
-        axiosInstance.defaults.headers.Authorization = `Bearer ${accessToken}`;
+        axiosInstance.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
-        startAllServices();
+        await startAllServices();
 
         const permissionGranted = await requestPushPermission();
         if (permissionGranted) {
@@ -59,8 +77,11 @@ const LoginScreen = () => {
         navigation.navigate('MainScreen' as never);
       } catch (e) {
         console.log('자동 로그인 실패:', e);
+      } finally {
+        authState.isAutoLoggingIn = false;
       }
     };
+
     tryAutoLogin();
   }, [navigation]);
 
@@ -93,11 +114,17 @@ const LoginScreen = () => {
       else if (role === 'GOV') navigation.navigate('Dashboard' as never);
       else navigation.navigate('MainScreen' as never);
     } catch (error: any) {
-      console.error('❌ 로그인 실패:', error.response?.data || error.message || JSON.stringify(error));
-      Alert.alert('로그인 실패', '이메일 또는 비밀번호를 확인해주세요');
+      const serverError = error.response?.data;
+      console.error("❌ 로그인 실패:", serverError || error.message || JSON.stringify(error));
+
+      showErrorAlert(
+        serverError?.code as ErrorCode,
+        serverError?.payload
+      );
     } finally {
       setLoading(false);
     }
+
   };
 
   return (
