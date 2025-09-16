@@ -8,11 +8,11 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import java.io.IOException
+import com.disasteraidplatform.BuildConfig
 
 object BackendApi {
     private const val TAG = "BackendApi"
-    private const val BASE_URL = "http://192.168.0.12:8080/api"
-
+    private const val BASE_URL = BuildConfig.BASE_URL
     private val client = OkHttpClient()
     private val gson = Gson()
 
