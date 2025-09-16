@@ -77,6 +77,4 @@ yarn-error.log
 # FCM
 android/app/google-services.json
 .env
-android/gradle.properties
-
 .log

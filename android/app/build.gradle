@@ -4,6 +4,14 @@ apply plugin: "kotlinx-serialization"
 apply plugin: "com.facebook.react"
 apply plugin: "com.google.gms.google-services"
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { stream ->
+        localProperties.load(stream)
+    }
+}
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -87,7 +95,9 @@ android {
         versionCode 1
         versionName "1.0"
 
-        buildConfigField "String", "KAKAO_REST_API_KEY", "\"${KAKAO_REST_API_KEY}\""
+        buildConfigField "String", "KAKAO_REST_API_KEY", "\"${localProperties.getProperty("KAKAO_REST_API_KEY") ?: ""}\""
+        buildConfigField "String", "BASE_URL", "\"${localProperties.getProperty("BASE_URL") ?: ""}\""
+    
     }
     signingConfigs {
         debug {
