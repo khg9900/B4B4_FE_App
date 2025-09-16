@@ -17,7 +17,6 @@ import MainScreen from '../api/location/screens/MainScreen';
 
 import Layout from '../components/Layout';
 import ReportScreen from '../api/report/screens/ReportScreen';
-import DashboardScreen from '../api/report/screens/DashboardScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -60,7 +59,6 @@ const RootNavigator = () => {
       <Stack.Screen name="MyActivities" component={withLayout(MyActivitiesScreen)} options={{ headerShown: false }} />
       <Stack.Screen name="ReportList" component={withLayout(ReportListPage)} options={{ headerShown: false }} />
       <Stack.Screen name="ReportScreen" component={withLayout(ReportScreen)} options={{ headerShown: false }} />
-      <Stack.Screen name="Dashboard" component={withLayout(DashboardScreen)} options={{ headerShown: false }} />
       <Stack.Screen name="Alert" component={withLayout(AlertScreen)} options={{ headerShown: false }} /> 
       <Stack.Screen name="UserParticipation" component={withLayout(UserParticipationScreen)} options={{ headerShown: false }}
 />

@@ -19,6 +19,14 @@ const disasterTypeNames = {
   TERROR_ATTACK: '테러', BUILDING_COLLAPSE: '건물 붕괴'
 };
 
+// 표시용: null/'null'/빈칸 제거 후 합치기
+const joinLabel = (...parts: (string | null | undefined)[]) =>
+  parts.filter(p => p && p.trim() && p.trim().toLowerCase() !== 'null').join(' ');
+
+// 전송용: 값 없으면 null
+const norm = (v?: string | null) =>
+  v && v.trim() && v.trim().toLowerCase() !== 'null' ? v.trim() : null;
+
 const ReportScreen = () => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [description, setDescription] = useState('');
@@ -63,8 +71,8 @@ const ReportScreen = () => {
     const requestPayload = {
       disasterType: selectedType,
       description,
-      province,
-      city: city || '',
+      province: norm(province)!,     // province는 값이 있어야 하므로 !
+      city: norm(city),              // 세종이면 null로 감
       latitude,
       longitude,
       image: image
@@ -141,7 +149,7 @@ const ReportScreen = () => {
       {image && <Text style={styles.fileText}>📷 선택된 이미지: {image.fileName}</Text>}
       {video && <Text style={styles.fileText}>🎞 선택된 영상: {video.fileName}</Text>}
 
-      <Text style={styles.locationLabel}>📍 위치: {province} {city || ''}</Text>
+      <Text style={styles.locationLabel}>📍 위치: {joinLabel(province, city)}</Text>
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
