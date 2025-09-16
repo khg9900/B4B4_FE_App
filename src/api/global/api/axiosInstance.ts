@@ -3,7 +3,8 @@ import { NativeModules } from "react-native";
 import { navigate } from "../../../navigation/AppNavigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const localIP = "192.168.45.76";
+// ✅ 환경별 baseURL
+const localIP = '192.168.1.100';
 const baseURL = `http://${localIP}:8080/api`;
 const { JwtModule } = NativeModules;
 
