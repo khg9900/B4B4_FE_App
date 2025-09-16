@@ -10,6 +10,7 @@ import {
 import { userApi } from '../api/userApi';
 import type { SignUpRequestDto } from '../types/User';
 import { useNavigation } from '@react-navigation/native';
+import { showErrorAlert, ErrorCode } from '../../global/utils/showErrorAlert';
 
 const SignUpScreen = () => {
   const navigation = useNavigation();
@@ -27,9 +28,14 @@ const SignUpScreen = () => {
       await userApi.signUp(form);
       Alert.alert('회원가입 성공');
       navigation.navigate('Login' as never);
-    } catch (error) {
-      console.error(error);
-      Alert.alert('회원가입 실패', '입력값을 다시 확인해주세요');
+    } catch (error: any) {
+      const serverError = error.response?.data;
+      console.error("❌ 회원가입 실패:", serverError || error.message || JSON.stringify(error));
+
+      showErrorAlert(
+        serverError?.code as ErrorCode,
+        serverError?.payload
+      );
     }
   };
 
