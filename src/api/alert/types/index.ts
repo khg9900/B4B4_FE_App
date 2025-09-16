@@ -1,4 +1,8 @@
-// 📁 src/alert/types/index.ts
+// src/alert/types/index.ts
+export enum VolunteerAlertSubtype {
+  UPDATED = 'UPDATED',
+  CANCELED = 'CANCELED',
+}
 
 export type Alert = DisasterAlert | VolunteerAlert;
 
@@ -20,5 +24,5 @@ export interface VolunteerAlert extends BaseAlert {
   title: string;
   placeName: string;
   volunteerDate: string;
-  suptype: string;
+  subtype: VolunteerAlertSubtype;
 }
