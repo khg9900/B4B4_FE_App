@@ -2,9 +2,13 @@ import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import { NativeModules } from "react-native";
 import { navigate } from "../../../navigation/AppNavigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { authState } from '../../global/utils/authState';
+import {stopForegroundService} from "../../location/hooks/startLocationService";
+
 
 // ✅ 환경별 baseURL
 const localIP = '192.168.1.100';
+
 const baseURL = `http://${localIP}:8080/api`;
 const { JwtModule } = NativeModules;
 
@@ -70,6 +74,7 @@ axiosInstance.interceptors.request.use(async (config) => {
   if (!token) {
     console.warn("토큰 없음 → 로그인 화면으로 이동");
     await clearTokens();
+    await stopForegroundService();
     navigate("Login");
     return Promise.reject(new Error("No token"));
   }
@@ -88,8 +93,14 @@ axiosInstance.interceptors.response.use(
     if (!originalRequest || isAuthExcluded(originalRequest.url)) return Promise.reject(err);
 
     if (err.response?.status === 401 && !originalRequest.__isRetryRequest) {
-      console.warn("401 발생 → 토큰 만료 또는 권한 문제, 로그인 화면으로 이동");
+      if (authState.isAutoLoggingIn) {
+        console.warn('401 발생(자동로그인 중) → 리다이렉트 억제');
+        return Promise.reject(err); // 자동로그인일 땐 화면 이동 X
+      }
+
+      console.warn("401 발생 → 토큰 만료, 로그인 화면으로 이동");
       await clearTokens();
+      await stopForegroundService();
       navigate("Login");
     }
 

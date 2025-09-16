@@ -114,8 +114,10 @@ class ForegroundLocationService : Service() {
 
     // --- WebSocket 초기화 ---
     private suspend fun initWebSocket() {
+
         val locationUrl = "ws://192.168.1.100:8080/api/location-tracking"
         val trackingUrl = "ws://192.168.1.100:8080/api/tracking"
+
 
         wsManager = WebSocketManager(locationUrl, trackingUrl)
         wsManager?.connectAll(
