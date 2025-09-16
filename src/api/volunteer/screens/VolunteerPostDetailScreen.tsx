@@ -15,7 +15,7 @@ import { volunteerApi } from '../api/VolunteerApi';
 import type { PostDetailResponse } from '../types/Post';
 import { styles } from './VolunteerPostDetailStyles.ts';
 import VolunteerMap from './VolunteerMap';
-
+import { ErrorCode, showErrorAlert } from '../../global/utils/showErrorAlert';
 
 const PostCategoryMap: Record<string, string> = {
   RECRUITMENT: '봉사 활동 모집',
@@ -67,8 +67,14 @@ const VolunteerPostDetailScreen = () => {
       await axiosInstance.post(`/posts/${postId}/teams/${teamNumber}/apply`);
       Alert.alert('✅ 참가 성공', `팀 ${teamNumber}에 참가하셨습니다.`);
       fetchTeams();
-    } catch (err) {
-      Alert.alert('❌ 참가 실패', '이미 참가했거나 인원이 가득 찼습니다.');
+    } catch (err: any) {
+      const serverError = err.response?.data;
+      console.error('팀 참가 실패:', serverError || err.message || JSON.stringify(err));
+
+      showErrorAlert(
+        serverError?.code as ErrorCode,
+        serverError?.payload
+      );
     }
   };
 
