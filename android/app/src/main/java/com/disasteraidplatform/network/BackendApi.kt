@@ -11,8 +11,7 @@ import java.io.IOException
 
 object BackendApi {
     private const val TAG = "BackendApi"
-
-    private const val BASE_URL = "http://192.168.1.100:8080/api"
+    private const val BASE_URL = "http://192.168.0.12:8080/api"
 
     private val client = OkHttpClient()
     private val gson = Gson()

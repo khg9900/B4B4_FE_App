@@ -1,36 +1,34 @@
 // src/api/report/api/myReportApi.ts
-import apiClient from '../../global/api/axiosInstance'
+import apiClient from '../../global/api/axiosInstance';
+import type { ReportResponse } from '../types/api';
 
-export interface ReportFilter {
-  page?: number;
-  size?: number;
+export interface ReportCursorRequest {
+  province?: string;
+  city?: string;
   status?: string;
-  start?: string;    // ISO Date string
-  end?: string;      // ISO Date string
-  sort?: string;
+  pageSize?: number;
+  lastCreatedAt?: string; 
+  lastId?: number;  
+  startDate?: string; 
+  endDate?: string; 
+  sortOrder?: 'ASC' | 'DESC';
 }
 
-export interface ReportPayload<T> {
+export interface CursorResponse<T> {
   content: T[];
   last: boolean;
-  // 필요시 totalPages, totalElements 등 추가
+  lastId?: number;
+  lastCreatedAt?: string;
 }
 
-export const fetchMyReports = async <T = any>(
-  filter: ReportFilter
-): Promise<ReportPayload<T>> => {
+export const fetchMyReportsCursor = async (
+  req: ReportCursorRequest
+): Promise<CursorResponse<ReportResponse>> => {
   try {
-    const { page = 0, size = 10, status, start, end, sort } = filter;
-    const params: any = { page, size };
-    if (status) params.status = status;
-    if (start)  params.start  = start;
-    if (end)    params.end    = end;
-    if (sort)   params.sort   = sort;
-
-    const response = await apiClient.get('/reports/my', { params });
+    const response = await apiClient.get('/reports/my/cursor', { params: req });
     return response.data.payload;
   } catch (error: any) {
-    console.error('📌 fetchMyReports 에러:', error.response?.data || error.message);
-    throw error; // 호출하는 쪽에서 추가 처리 가능
+    console.error('📌 fetchMyReportsCursor 에러:', error.response?.data || error.message);
+    throw error;
   }
 };
