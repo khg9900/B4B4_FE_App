@@ -5,7 +5,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authState } from '../../global/utils/authState';
 import {stopForegroundService} from "../../location/hooks/startLocationService";
 
-const localIP = "192.168.25.177";
+
+// ✅ 환경별 baseURL
+const localIP = '192.168.1.100';
+
 const baseURL = `http://${localIP}:8080/api`;
 const { JwtModule } = NativeModules;
 
