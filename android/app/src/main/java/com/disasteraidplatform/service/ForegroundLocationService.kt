@@ -119,9 +119,6 @@ class ForegroundLocationService : Service() {
         val baseUrl = BuildConfig.BASE_URL.removeSuffix("/")
         val locationUrl = "$baseUrl/location-tracking"
         val trackingUrl = "$baseUrl/tracking"
-
-
-
         wsManager = WebSocketManager(locationUrl, trackingUrl)
         wsManager?.connectAll(
             onTrackingEvent = { event -> handleTrackingEvent(event) },

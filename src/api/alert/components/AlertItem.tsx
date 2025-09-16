@@ -1,7 +1,8 @@
+// src/components/AlertItem.tsx
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { getRelativeTime, formatKoreanDate } from '../utils/dateUtils';
-import { Alert } from '../types';
+import { Alert, VolunteerAlertSubtype } from '../types';
 import { joinSpace } from '../utils/text';
 
 type Props = {
@@ -26,7 +27,7 @@ export const AlertItem = ({ alert }: Props) => {
     }
 
     // volunteer
-    const isCancel = alert.suptype === 'cancel';
+    const isCancel = alert.subtype === VolunteerAlertSubtype.CANCELED;
     const noticeType = isCancel ? '취소 공지' : '변경 공지';
 
     return (
