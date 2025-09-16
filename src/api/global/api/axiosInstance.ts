@@ -13,8 +13,29 @@ const axiosInstance = axios.create({
   baseURL,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
+  headers: { "Content-Type": "application/json" },
 });
 
+// 인증 제외 URL
+const isAuthExcluded = (url?: string) => {
+  if (!url) return false;
+  const paths = ["/auth/login", "/auth/reissue", "/auth/signup"];
+  return paths.some((path) => url.endsWith(path));
+};
+
+// NativeModule에서 accessToken 읽기
+const getNativeToken = async (): Promise<string | null> => {
+  try {
+    const token = await JwtModule.getToken();
+    return token ?? null;
+  } catch (e) {
+    console.warn("NativeModule에서 토큰 가져오기 실패", e);
+    return null;
+  }
+};
+
+// 토큰 삭제 (Native + AsyncStorage)
+const clearTokens = async () => {
 // 인증 제외 URL
 const isAuthExcluded = (url?: string) => {
   if (!url) return false;
@@ -51,9 +72,26 @@ const saveTokens = async (accessToken: string, refreshToken?: string) => {
         ["accessToken", accessToken],
         ["refreshToken", refreshToken],
       ]);
+    await JwtModule.clearTokens();
+    await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
+  } catch (e) {
+    console.warn("토큰 삭제 실패", e);
+  }
+};
+
+// 토큰 저장 (Native + AsyncStorage)
+const saveTokens = async (accessToken: string, refreshToken?: string) => {
+  try {
+    if (refreshToken) {
+      await AsyncStorage.multiSet([
+        ["accessToken", accessToken],
+        ["refreshToken", refreshToken],
+      ]);
     } else {
       await AsyncStorage.setItem("accessToken", accessToken);
+      await AsyncStorage.setItem("accessToken", accessToken);
     }
+    await JwtModule.setToken(accessToken, refreshToken ?? "");
     await JwtModule.setToken(accessToken, refreshToken ?? "");
   } catch (e) {
     console.warn("토큰 저장 실패", e);
@@ -78,9 +116,13 @@ axiosInstance.interceptors.request.use(async (config) => {
 
   config.headers = config.headers ?? {};
   (config.headers as any).Authorization = `Bearer ${token}`;
+
+  config.headers = config.headers ?? {};
+  (config.headers as any).Authorization = `Bearer ${token}`;
   return config;
 });
 
+/** Response interceptor: 401 발생 시 로그인 처리 */
 /** Response interceptor: 401 발생 시 로그인 처리 */
 axiosInstance.interceptors.response.use(
   (res) => res,
@@ -102,8 +144,10 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(err);
+    return Promise.reject(err);
   }
 );
 
 export default axiosInstance;
+export { clearTokens, saveTokens };
 export { clearTokens, saveTokens };

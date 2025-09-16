@@ -28,10 +28,4 @@ class JwtModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
         if (newToken != null) promise.resolve(newToken)
         else promise.reject("REFRESH_FAILED", "Failed to refresh access token.")
     }
-    @ReactMethod
-    fun clearTokens(promise: Promise) {
-        val prefs = reactApplicationContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        prefs.edit().remove("accessToken").remove("refreshToken").apply()
-        promise.resolve(true)
-    }
 }
