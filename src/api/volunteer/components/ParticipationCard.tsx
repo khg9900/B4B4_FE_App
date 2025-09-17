@@ -73,7 +73,6 @@ const ParticipationCard = ({ item, onCancel, onPress }: Props) => (
           <Text style={styles.statusBadgeText}>{getStatusLabel(item.status)}</Text>
         </View>
       </View>
-
       {item.status === 'PARTICIPATED' && (
         <TouchableOpacity
           style={styles.cancelButton}

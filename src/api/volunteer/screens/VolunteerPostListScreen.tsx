@@ -17,8 +17,6 @@ const VolunteerPostListScreen = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-
-  // 필터 상태
   const [province, setProvince] = useState<string | null>(null);
   const [city, setCity] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'OPEN' | 'CLOSED' | 'COMPLETED' | null>(null);
