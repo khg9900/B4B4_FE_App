@@ -6,7 +6,7 @@ import { authState } from '../../global/utils/authState';
 import {stopForegroundService} from "../../location/hooks/startLocationService";
 
 // ✅ 환경별 baseURL
-const baseURL = 'http://192.168.1.100:8080/api';
+const baseURL = 'http://192.168.0.12:8080/api';
 const { JwtModule } = NativeModules;
 
 const axiosInstance = axios.create({

@@ -1,13 +1,10 @@
 import axiosInstance from '../../global/api/axiosInstance';
 import type {
-  CreatePostRequest,
   PostDetailResponse,
-  PostsResponse,
   PostTeamsResponse,
   SliceResponse,
   PostFilterRequest,
   PostsTotalResponse,
-  TeamStatus,
 } from '../types/Post';
 
 export const volunteerApi = {
@@ -32,16 +29,6 @@ export const volunteerApi = {
       return response.data.payload;
     } catch (error: any) {
       console.error('📌 getPostDetail 에러:', error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  createPost: async (data: CreatePostRequest) => {
-    try {
-      const response = await axiosInstance.post('/post', data);
-      return response.data.payload;
-    } catch (error: any) {
-      console.error('📌 createPost 에러:', error.response?.data || error.message);
       throw error;
     }
   },
