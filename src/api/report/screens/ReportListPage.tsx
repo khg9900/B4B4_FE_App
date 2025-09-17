@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity, RefreshControl, Alert, ActivityIndicator,
-  Platform, Modal, TouchableWithoutFeedback
+  Platform, Modal, TouchableWithoutFeedback, Image, Linking, Dimensions
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { fetchMyReportsCursor, ReportCursorRequest, CursorResponse } from '../api/myReportApi';
@@ -47,6 +47,9 @@ export default function ReportListPage() {
   const [showPicker, setShowPicker] = useState<'start' | 'end' | undefined>(undefined);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
 
+  // 이미지 원본 미리보기
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const pageSize = 10;
 
   const loadReports = async (reset = true) => {
@@ -57,7 +60,7 @@ export default function ReportListPage() {
         province: undefined,
         city: undefined,
         status: statusFilter,
-        pageSize: pageSize + 1, // limitPlusOne 전략
+        pageSize: pageSize + 1,
         sortOrder,
         lastCreatedAt: reset ? undefined : lastCreatedAt,
         lastId: reset ? undefined : lastId,
@@ -72,7 +75,7 @@ export default function ReportListPage() {
 
       if (content.length > pageSize) {
         next = true;
-        content = content.slice(0, pageSize); // 마지막 하나는 hasNext 판단용
+        content = content.slice(0, pageSize);
       }
 
       if (reset) setReports(content);
@@ -195,6 +198,45 @@ export default function ReportListPage() {
     </View>
   );
 
+  // 카드 내 미디어 섹션
+  const MediaRow = ({ imageUrl, videoUrl }: { imageUrl?: string | null; videoUrl?: string | null }) => {
+    if (!imageUrl && !videoUrl) return null;
+
+    return (
+      <View style={styles.mediaRow}>
+        {imageUrl ? (
+          <TouchableOpacity activeOpacity={0.85} onPress={() => setPreviewUrl(imageUrl!)}>
+            <Image
+              source={{ uri: imageUrl! }}
+              style={styles.thumbImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        ) : null}
+
+        {videoUrl ? (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={async () => {
+              try {
+                const supported = await Linking.canOpenURL(videoUrl!);
+                if (supported) Linking.openURL(videoUrl!);
+                else Alert.alert('재생 불가', '이 링크를 열 수 없습니다.');
+              } catch {
+                Alert.alert('오류', '동영상을 열 수 없습니다.');
+              }
+            }}
+          >
+            <View style={styles.videoThumb}>
+              <Text style={styles.videoBadge}>동영상 ▶</Text>
+              <Text style={styles.videoHint}>탭하여 재생</Text>
+            </View>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       {showPicker && (
@@ -216,6 +258,8 @@ export default function ReportListPage() {
             <Text style={styles.cardStatus}>{REPORT_STATUS_KO[(item.status as ReportStatus)] ?? item.status}</Text>
             <Text style={styles.cardDate}>{formatDateLabel(item.createdAt)}</Text>
             <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+
+            <MediaRow imageUrl={(item as any).imageUrl} videoUrl={(item as any).videoUrl} />
           </View>
         )}
         onEndReached={loadMore}
@@ -225,9 +269,32 @@ export default function ReportListPage() {
         ListEmptyComponent={() => (<View style={styles.empty}><Text>신고 내역이 없습니다.</Text></View>)}
         contentContainerStyle={styles.listContainer}
       />
+
+      {/* 이미지 원본 보기 모달 */}
+      <Modal visible={!!previewUrl} transparent animationType="fade" onRequestClose={() => setPreviewUrl(null)}>
+        <TouchableWithoutFeedback onPress={() => setPreviewUrl(null)}>
+          <View style={styles.previewOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.previewBox}>
+                {previewUrl ? (
+                  <Image
+                    source={{ uri: previewUrl }}
+                    style={styles.previewImage}
+                    resizeMode="contain"
+                    onError={() => Alert.alert('오류', '이미지를 불러올 수 없습니다.')}
+                  />
+                ) : null}
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }
+
+const W = Dimensions.get('window').width;
+const H = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
@@ -248,11 +315,40 @@ const styles = StyleSheet.create({
   cardStatus: { fontSize: 13, marginVertical: 4, color: ORANGE_DARK, fontWeight: '600' },
   cardDate: { fontSize: 12, color: TEXT_MUTED },
   cardDesc: { fontSize: 13, marginTop: 8, color: '#374151' },
+
+  // 미디어
+  mediaRow: { marginTop: 10, flexDirection: 'row', gap: 10 },
+  thumbImage: {
+    width: 120, height: 90,
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1, borderColor: BORDER, borderRadius: 8,
+  },
+  videoThumb: {
+    width: 120, height: 90,
+    backgroundColor: '#000',
+    borderWidth: 1, borderColor: BORDER, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  videoBadge: { color: '#fff', fontWeight: '800' },
+  videoHint: { color: '#ddd', fontSize: 11, marginTop: 6 },
+
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 8, fontSize: 16 },
   empty: { paddingVertical: 40, alignItems: 'center' },
+
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
   modalBox: { position: 'absolute', top: 120, left: 16, right: 16, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', elevation: 6 },
   modalItem: { paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: BORDER },
   modalItemText: { fontSize: 14, color: TEXT_DARK },
+
+  // 원본 프리뷰
+  previewOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'center', alignItems: 'center' },
+  previewBox: {
+    width: Math.floor(W * 0.92),
+    height: Math.floor(H * 0.92),
+    backgroundColor: '#000',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  previewImage: { width: '100%', height: '100%' },
 });

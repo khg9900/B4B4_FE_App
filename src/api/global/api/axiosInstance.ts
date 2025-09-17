@@ -4,11 +4,9 @@ import { navigate } from "../../../navigation/AppNavigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authState } from '../../global/utils/authState';
 import {stopForegroundService} from "../../location/hooks/startLocationService";
-import { BASE_URL } from "@env";
 
 // ✅ 환경별 baseURL
-const baseURL = BASE_URL;
-console.log("API Base URL:", baseURL);
+const baseURL = 'http://192.168.1.100:8080/api';
 const { JwtModule } = NativeModules;
 
 const axiosInstance = axios.create({
