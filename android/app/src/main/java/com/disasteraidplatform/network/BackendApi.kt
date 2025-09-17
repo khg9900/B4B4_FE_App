@@ -12,7 +12,9 @@ import com.disasteraidplatform.BuildConfig
 
 object BackendApi {
     private const val TAG = "BackendApi"
+
     private const val BASE_URL = BuildConfig.BASE_URL
+
     private val client = OkHttpClient()
     private val gson = Gson()
 

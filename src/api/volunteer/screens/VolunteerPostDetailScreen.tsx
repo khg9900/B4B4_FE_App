@@ -13,7 +13,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import axiosInstance from '../../global/api/axiosInstance';
 import { volunteerApi } from '../api/VolunteerApi';
 import type { PostDetailResponse } from '../types/Post';
-import { styles } from './VolunteerPostDetailStyles.ts';
+import { styles } from '../styles/VolunteerPostDetailStyles.ts';
 import VolunteerMap from './VolunteerMap';
 import { ErrorCode, showErrorAlert } from '../../global/utils/showErrorAlert';
 

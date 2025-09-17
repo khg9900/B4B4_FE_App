@@ -4,8 +4,10 @@ export interface VolunteerParticipationResponse {
   postTitle: string;
   teamNumber: number;
   status: 'PARTICIPATED' | 'CANCELLED' | 'BLACKLISTED' | 'PRESENT' | 'ABSENT';
-  joinedAt: string;
-  checkinStart: string;
-  checkinEnd: string;
+  volunteerDate: string;
+  volunteerStartTime: string;
+  volunteerEndTime: string;
+  province: string;
+  city: string;
   placeName: string;
 }

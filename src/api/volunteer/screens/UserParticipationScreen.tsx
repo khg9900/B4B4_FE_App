@@ -4,41 +4,52 @@ import { View, FlatList, Alert } from 'react-native';
 import { volunteerParticipantApi } from '../api/VolunteerApi';
 import type { VolunteerParticipationResponse } from '../types/Participation';
 import styles from '../styles/UserParticipationStyles';
-
 import ParticipationCard from '../components/ParticipationCard';
-import StatusFilter from '../components/StatusFilter';
-import DateRangePicker from '../components/DateRangePicker';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/types';
+import VolunteerPostFilter from '../components/VolunteerPostFilter';
 
-// 로컬 Date → KST ISO 문자열 변환
 const formatAsKSTISOString = (date: Date): string => {
   const kstOffset = 9 * 60;
   const utc = date.getTime() + date.getTimezoneOffset() * 60000;
   const kstDate = new Date(utc + kstOffset * 60000);
-  return kstDate.toISOString().slice(0, 19);
+  return kstDate.toISOString().slice(0, 10);
 };
 
 const UserParticipationScreen = () => {
   const [participations, setParticipations] = useState<VolunteerParticipationResponse[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [startTime, setStartTime] = useState<Date | null>(null);
-  const [endTime, setEndTime] = useState<Date | null>(null);
+  // 필터 상태
+  const [province, setProvince] = useState<string | null>(null);
+  const [city, setCity] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'OPEN' | 'CLOSED' | 'COMPLETED' | null>(null);
+  const [volunteerStartDate, setVolunteerStartDate] = useState<Date | null>(null);
+  const [volunteerEndDate, setVolunteerEndDate] = useState<Date | null>(null);
+  const [checkinStatus, setCheckinStatus] = useState<'PARTICIPATED' | 'CANCELLED' | 'BLACKLISTED' | 'PRESENT' | 'ABSENT' | null>(null);
+
+  // 모달/Picker 상태
+  const [provinceModalVisible, setProvinceModalVisible] = useState(false);
+  const [cityModalVisible, setCityModalVisible] = useState(false);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [checkinModalVisible, setCheckinModalVisible] = useState(false);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   useEffect(() => {
     fetchMyParticipations();
-  }, [statusFilter, startTime, endTime]);
+  }, [province, city, statusFilter, volunteerStartDate, volunteerEndDate, checkinStatus]);
 
   const fetchMyParticipations = async () => {
     try {
       const params: any = {};
-      if (statusFilter) params.status = statusFilter;
-      if (startTime) params.startTime = formatAsKSTISOString(startTime);
-      if (endTime) params.endTime = formatAsKSTISOString(endTime);
-
+      if (province) params.province = province;
+      if (city) params.city = city;
+      if (statusFilter) params.postStatus = statusFilter;
+      if (volunteerStartDate) params.volunteerStartDate = formatAsKSTISOString(volunteerStartDate);
+      if (volunteerEndDate) params.volunteerEndDate = formatAsKSTISOString(volunteerEndDate);
+      if (checkinStatus) params.checkinStatus = checkinStatus;
       const data = await volunteerParticipantApi.getMyParticipations(params);
       setParticipations(data);
     } catch (error) {
@@ -48,13 +59,11 @@ const UserParticipationScreen = () => {
 
   const handleCancel = async (participantId: number) => {
     try {
-      // 화면에서 즉시 상태 변경
       setParticipations((prev) =>
         prev.map((p) =>
           p.participantId === participantId ? { ...p, status: 'CANCELLED' } : p
         )
       );
-
       await volunteerParticipantApi.cancelParticipation(participantId);
       Alert.alert('알림', '참가가 취소되었습니다.');
     } catch (error: any) {
@@ -63,17 +72,44 @@ const UserParticipationScreen = () => {
     }
   };
 
+  const resetFilters = () => {
+    setProvince(null);
+    setCity(null);
+    setStatusFilter(null);
+    setVolunteerStartDate(null);
+    setVolunteerEndDate(null);
+    setCheckinStatus(null);
+  };
+
   return (
     <View style={styles.container}>
-      {/* 상태 필터 */}
-      <StatusFilter value={statusFilter} onChange={setStatusFilter} />
-
-      {/* 날짜 범위 선택 */}
-      <DateRangePicker
-        startTime={startTime}
-        endTime={endTime}
-        onChangeStart={setStartTime}
-        onChangeEnd={setEndTime}
+      {/* 공통 필터 + 체크인 상태 필터 */}
+      <VolunteerPostFilter
+        province={province}
+        city={city}
+        statusFilter={statusFilter}
+        volunteerStartDate={volunteerStartDate}
+        volunteerEndDate={volunteerEndDate}
+        checkinStatus={checkinStatus}
+        setProvince={setProvince}
+        setCity={setCity}
+        setStatusFilter={setStatusFilter}
+        setVolunteerStartDate={setVolunteerStartDate}
+        setVolunteerEndDate={setVolunteerEndDate}
+        setCheckinStatus={setCheckinStatus}
+        provinceModalVisible={provinceModalVisible}
+        cityModalVisible={cityModalVisible}
+        statusModalVisible={statusModalVisible}
+        checkinModalVisible={checkinModalVisible}
+        showStartPicker={showStartPicker}
+        showEndPicker={showEndPicker}
+        setProvinceModalVisible={setProvinceModalVisible}
+        setCityModalVisible={setCityModalVisible}
+        setStatusModalVisible={setStatusModalVisible}
+        setCheckinModalVisible={setCheckinModalVisible}
+        setShowStartPicker={setShowStartPicker}
+        setShowEndPicker={setShowEndPicker}
+        resetFilters={resetFilters}
       />
 
       {/* 참가 목록 */}
@@ -84,9 +120,7 @@ const UserParticipationScreen = () => {
           <ParticipationCard
             item={item}
             onCancel={handleCancel}
-            onPress={() =>
-              navigation.navigate('PostDetail', { postId: item.postId })
-            }
+            onPress={() => navigation.navigate('PostDetail', { postId: item.postId })}
           />
         )}
         contentContainerStyle={styles.listContainer}
