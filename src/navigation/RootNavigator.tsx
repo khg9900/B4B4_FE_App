@@ -4,7 +4,6 @@ import LoginScreen from '../api/auth/screens/loginScreen';
 import SignUpScreen from '../api/auth/screens/singupScreen';
 
 import VolunteerPostListScreen from '../api/volunteer/screens/VolunteerPostListScreen';
-import VolunteerPostCreateScreen from '../api/volunteer/screens/VolunteerPostCreateScreen';
 import VolunteerPostDetailScreen from '../api/volunteer/screens/VolunteerPostDetailScreen';
 import UserParticipationScreen from '../api/volunteer/screens/UserParticipationScreen';
 
@@ -55,7 +54,6 @@ const RootNavigator = () => {
       {/* ✅ Layout 적용 */}
       <Stack.Screen name="MainScreen" component={withLayout(MainScreen)} options={{ headerShown: false }} />
       <Stack.Screen name="VolunteerPosts" component={withLayout(VolunteerPostListScreen)} options={{ headerShown: false }} />
-      <Stack.Screen name="PostCreate" component={withLayout(VolunteerPostCreateScreen)} options={{ headerShown: false }} />
       <Stack.Screen name="PostDetail" component={withLayout(VolunteerPostDetailScreen)} options={{ headerShown: false }} />
       <Stack.Screen name="MyActivities" component={withLayout(MyActivitiesScreen)} options={{ headerShown: false }} />
       <Stack.Screen name="ReportList" component={withLayout(ReportListPage)} options={{ headerShown: false }} />
