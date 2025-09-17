@@ -4,14 +4,16 @@ import {
   View, Text, TextInput, StyleSheet,
   Alert, TouchableOpacity, ActivityIndicator,
   PermissionsAndroid, Platform, Image,
-  ScrollView,
+  ScrollView, KeyboardAvoidingView,
 } from 'react-native';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import { createReport } from '../api/report';
 import { useCurrentLocation } from '../../location/hooks/useCurrentLocation';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const B4_ORANGE = '#FF6B00';
 const B4_ORANGE_LIGHT = '#FFD4B3';
+const TABBAR_HEIGHT = 56; // 실제 탭바 높이에 맞게 조정
 
 const disasterTypeNames = {
   EARTHQUAKE: '지진', FLOOD: '홍수', TYPHOON: '태풍',
@@ -34,8 +36,12 @@ const ReportScreen = () => {
   const [image, setImage] = useState<Asset | null>(null);
   const [video, setVideo] = useState<Asset | null>(null);
 
-  // 변경된 변수명 반영
+  // 위치
   const { latitude, longitude, province, city, loading } = useCurrentLocation();
+
+  // 안전 영역
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = TABBAR_HEIGHT;
 
   const pickMedia = async (type: 'photo' | 'video') => {
     try {
@@ -71,8 +77,8 @@ const ReportScreen = () => {
     const requestPayload = {
       disasterType: selectedType,
       description,
-      province: norm(province)!,     // province는 값이 있어야 하므로 !
-      city: norm(city),              // 세종이면 null로 감
+      province: norm(province)!,
+      city: norm(city),
       latitude,
       longitude,
       image: image
@@ -114,63 +120,77 @@ const ReportScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.headerBar}>
-        <Text style={styles.headerText}>재난 신고</Text>
-      </View>
-
-      <View style={{ marginBottom: 28 }}>
-        <Text style={[styles.subheader, { marginBottom: 16 }]}>재난 유형 선택</Text>
-        <View style={styles.typeContainer}>
-          {Object.entries(disasterTypeNames).map(([key, label]) => (
-            <TouchableOpacity
-              key={key}
-              onPress={() => setSelectedType(key)}
-              style={[styles.typeButton, selectedType === key && styles.typeButtonSelected]}
-            >
-              <Text style={{ color: selectedType === key ? B4_ORANGE : 'black', fontWeight: '600' }}>{label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <Text style={[styles.subheader, { marginBottom: 16 }]}>미디어 첨부</Text>
-      <View style={styles.mediaBoxWrapper}>
-        <TouchableOpacity onPress={() => pickMedia('photo')} style={styles.mediaBox}>
-          <Text style={styles.mediaIcon}>📷</Text>
-          <Text style={styles.mediaLabel}>사진</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => pickMedia('video')} style={styles.mediaBox}>
-          <Text style={styles.mediaIcon}>🎥</Text>
-          <Text style={styles.mediaLabel}>영상</Text>
-        </TouchableOpacity>
-      </View>
-
-      {image && <Text style={styles.fileText}>📷 선택된 이미지: {image.fileName}</Text>}
-      {video && <Text style={styles.fileText}>🎞 선택된 영상: {video.fileName}</Text>}
-
-      <Text style={styles.locationLabel}>📍 위치: {joinLabel(province, city)}</Text>
-      <View style={styles.inputWrapper}>
-        <TextInput
-          style={styles.input}
-          multiline
-          placeholder="상황 설명을 입력하세요 (최대 1000자)"
-          value={description}
-          maxLength={1000}
-          onChangeText={setDescription}
-        />
-      </View>
-
-      <Text style={styles.charCount}>{description.length}/1000</Text>
-
-      <TouchableOpacity
-        style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
-        onPress={handleReport}
-        disabled={isSubmitting}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? tabBarHeight : 0}
+    >
+      <ScrollView
+        style={styles.container}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          paddingBottom: tabBarHeight + insets.bottom + -20, // 버튼이 탭바에 가리지 않도록 여유
+        }}
       >
-        <Text style={styles.submitButtonText}>{isSubmitting ? '접수중...' : '신고하기'}</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <View style={styles.headerBar}>
+          <Text style={styles.headerText}>재난 신고</Text>
+        </View>
+
+        <View style={{ marginBottom: 28 }}>
+          <Text style={[styles.subheader, { marginBottom: 16 }]}>재난 유형 선택</Text>
+          <View style={styles.typeContainer}>
+            {Object.entries(disasterTypeNames).map(([key, label]) => (
+              <TouchableOpacity
+                key={key}
+                onPress={() => setSelectedType(key)}
+                style={[styles.typeButton, selectedType === key && styles.typeButtonSelected]}
+              >
+                <Text style={{ color: selectedType === key ? B4_ORANGE : 'black', fontWeight: '600' }}>{label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <Text style={[styles.subheader, { marginBottom: 16 }]}>미디어 첨부</Text>
+        <View style={styles.mediaBoxWrapper}>
+          <TouchableOpacity onPress={() => pickMedia('photo')} style={styles.mediaBox}>
+            <Text style={styles.mediaIcon}>📷</Text>
+            <Text style={styles.mediaLabel}>사진</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => pickMedia('video')} style={styles.mediaBox}>
+            <Text style={styles.mediaIcon}>🎥</Text>
+            <Text style={styles.mediaLabel}>영상</Text>
+          </TouchableOpacity>
+        </View>
+
+        {image && <Text style={styles.fileText}>📷 선택된 이미지: {image.fileName}</Text>}
+        {video && <Text style={styles.fileText}>🎞 선택된 영상: {video.fileName}</Text>}
+
+        <Text style={styles.locationLabel}>📍 위치: {joinLabel(province, city)}</Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.input}
+            multiline
+            scrollEnabled
+            placeholder="상황 설명을 입력하세요 (최대 1000자)"
+            value={description}
+            maxLength={1000}
+            onChangeText={setDescription}
+            textAlignVertical="top"
+          />
+        </View>
+
+        <Text style={styles.charCount}>{description.length}/1000</Text>
+
+        <TouchableOpacity
+          style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
+          onPress={handleReport}
+          disabled={isSubmitting}
+        >
+          <Text style={styles.submitButtonText}>{isSubmitting ? '접수중...' : '신고하기'}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -231,6 +251,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     minHeight: 100,
+    maxHeight: 200,            // 무한 확장 방지
     backgroundColor: 'white',
   },
   charCount: { textAlign: 'right', fontSize: 12, color: '#888', marginBottom: 12, marginTop: 4 },
