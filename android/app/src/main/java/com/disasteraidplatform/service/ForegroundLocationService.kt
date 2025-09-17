@@ -119,6 +119,9 @@ class ForegroundLocationService : Service() {
         val baseUrl = BuildConfig.BASE_URL.removeSuffix("/")
         val locationUrl = "$baseUrl/location-tracking"
         val trackingUrl = "$baseUrl/tracking"
+
+
+
         wsManager = WebSocketManager(locationUrl, trackingUrl)
         wsManager?.connectAll(
             onTrackingEvent = { event -> handleTrackingEvent(event) },
@@ -192,7 +195,10 @@ class ForegroundLocationService : Service() {
             val channel = NotificationChannel(
                 CHANNEL_ID, "Foreground Service Channel",
                 NotificationManager.IMPORTANCE_DEFAULT
-            )
+            ).apply{
+                setSound(null,null)
+                enableVibration(false)
+            }
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
     }
@@ -203,6 +209,7 @@ class ForegroundLocationService : Service() {
             .setContentText("📍 $message")
             .setSmallIcon(R.drawable.b4b4)
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
             .build()
 
     private fun updateForegroundNotification(message: String) {
