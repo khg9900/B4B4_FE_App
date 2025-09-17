@@ -31,14 +31,39 @@ const getStatusBadgeStyle = (status: VolunteerParticipationResponse['status']) =
   }
 };
 
+const formatTimeHM = (timeStr: string) => {
+  if (!timeStr) return '';
+  const [hh, mm] = timeStr.split(':');
+  return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}`;
+};
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const ParticipationCard = ({ item, onCancel, onPress }: Props) => (
   <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
     <View style={styles.card}>
       <Text style={styles.title}>{item.postTitle} - {item.teamNumber}팀</Text>
 
       <View style={styles.infoRow}>
-        <Text style={styles.infoIcon}>📍</Text>
-        <Text style={styles.infoText}>장소: {item.placeName}</Text>
+        <Text style={styles.infoIcon}>📌</Text>
+        <Text style={styles.infoText}>장소: {item.province} {item.city} {item.placeName}</Text>
+      </View>
+
+      <View style={styles.infoRow}>
+        <Text style={styles.infoIcon}>📆</Text>
+        <Text style={styles.infoText}>
+          일자 : {formatDate(item.volunteerDate)}
+        </Text>
+        <Text style={styles.infoIcon}>⏰</Text>
+        <Text style={styles.infoText}>
+          시간 : {formatTimeHM(item.volunteerStartTime)} ~ {formatTimeHM(item.volunteerEndTime)}
+        </Text>
       </View>
 
       <View style={styles.infoRow}>
@@ -47,21 +72,6 @@ const ParticipationCard = ({ item, onCancel, onPress }: Props) => (
         <View style={getStatusBadgeStyle(item.status)}>
           <Text style={styles.statusBadgeText}>{getStatusLabel(item.status)}</Text>
         </View>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.infoIcon}>⏰</Text>
-        <Text style={styles.infoText}>참가 시각: {new Date(item.joinedAt).toLocaleString()}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.infoIcon}>🕐</Text>
-        <Text style={styles.infoText}>출석 시작: {new Date(item.checkinStart).toLocaleString()}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.infoIcon}>🕕</Text>
-        <Text style={styles.infoText}>출석 종료: {new Date(item.checkinEnd).toLocaleString()}</Text>
       </View>
 
       {item.status === 'PARTICIPATED' && (

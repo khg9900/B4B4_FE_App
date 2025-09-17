@@ -14,7 +14,7 @@ const formatAsKSTISOString = (date: Date): string => {
   const kstOffset = 9 * 60;
   const utc = date.getTime() + date.getTimezoneOffset() * 60000;
   const kstDate = new Date(utc + kstOffset * 60000);
-  return kstDate.toISOString().slice(0, 19);
+  return kstDate.toISOString().slice(0, 10); // 날짜 필터용으로 YYYY-MM-DD
 };
 
 const UserParticipationScreen = () => {
@@ -48,8 +48,8 @@ const UserParticipationScreen = () => {
       if (province) params.province = province;
       if (city) params.city = city;
       if (statusFilter) params.postStatus = statusFilter;
-      if (volunteerStartDate) params.volunteerStartDate = formatAsKSTISOString(volunteerStartDate);
-      if (volunteerEndDate) params.volunteerEndDate = formatAsKSTISOString(volunteerEndDate);
+      if (volunteerStartDate) params.startDate = formatAsKSTISOString(volunteerStartDate);
+      if (volunteerEndDate) params.endDate = formatAsKSTISOString(volunteerEndDate);
       if (checkinStatus) params.checkinStatus = checkinStatus;
 
       const data = await volunteerParticipantApi.getMyParticipations(params);
