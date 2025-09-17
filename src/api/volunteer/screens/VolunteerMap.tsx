@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { styles } from './VolunteerPostDetailStyles.ts';
+import { styles } from '../styles/VolunteerPostDetailStyles.ts';
 import { KAKAO_JS_API_KEY } from '@env';
 
 interface Props {

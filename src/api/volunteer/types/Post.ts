@@ -1,22 +1,3 @@
-export interface CreatePostRequest {
-  title: string;
-  content: string;
-  category: 'RECRUITMENT'; // 무조건 RECRUITMENT
-  totalCapacity: number;
-  teamSize: number;
-  location: {
-    placeName: string;
-    latitude: number;
-    longitude: number;
-  };
-  attendancePolicy: {
-    checkinStart: string; // ISO 8601
-    checkinEnd: string;
-    allowedRadiusM: number;
-    minStayMinutes: number;
-  };
-}
-
 // 서버 DTO 기반 게시글 리스트 아이템
 export interface PostsResponse {
   id: number;
