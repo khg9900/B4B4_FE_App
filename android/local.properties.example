@@ -1,9 +1,0 @@
-# Android SDK 경로 (필수, 본인 PC에 맞게 수정)
-sdk.dir=C:\Users\swsj9\AppData\Local\Android\Sdk
-
-# Base URL of your backend API
-BASE_URL=http://192.168.1.100:8080/api
-# Example: BASE_URL=http://192.168.1.100:8080/api
-
-# Kakao REST API Key
-KAKAO_REST_API_KEY=8a4e93e2bf8c267cf588ab224b7b590c
