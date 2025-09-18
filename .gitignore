@@ -78,3 +78,5 @@ yarn-error.log
 android/app/google-services.json
 .env
 .log
+
+android/local.properties.example

@@ -19,6 +19,8 @@ const formatAsKSTISOString = (date: Date): string => {
 
 const UserParticipationScreen = () => {
   const [participations, setParticipations] = useState<VolunteerParticipationResponse[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
   // 필터 상태
   const [province, setProvince] = useState<string | null>(null);
   const [city, setCity] = useState<string | null>(null);
@@ -54,6 +56,15 @@ const UserParticipationScreen = () => {
       setParticipations(data);
     } catch (error) {
       console.error('참가 목록 조회 실패:', error);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchMyParticipations();
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -124,6 +135,8 @@ const UserParticipationScreen = () => {
           />
         )}
         contentContainerStyle={styles.listContainer}
+        refreshing={refreshing}       // Pull-to-Refresh 상태
+        onRefresh={onRefresh}         // 새로고침 시 호출
       />
     </View>
   );
