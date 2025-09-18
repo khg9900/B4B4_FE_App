@@ -76,7 +76,7 @@ const VolunteerPostDetailScreen = () => {
 
   const fetchTeams = async () => {
     try {
-      const res = await axiosInstance.get(`/post/${postId}/teams`);
+      const res = await axiosInstance.get(`/posts/${postId}/teams`);
       setTeams(res.data.payload.teams);
     } catch (err) {
       console.error('팀 정보 조회 실패:', err);
