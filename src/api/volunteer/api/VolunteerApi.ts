@@ -15,7 +15,7 @@ export const volunteerApi = {
   ): Promise<SliceResponse<PostsTotalResponse>> => {
     try {
       const params = { ...filter, page, size };
-      const response = await axiosInstance.get('/post', { params });
+      const response = await axiosInstance.get('/posts', { params });
       return response.data.payload;
     } catch (error: any) {
       console.error('📌 getPosts 에러:', error.response?.data || error.message);
@@ -25,7 +25,7 @@ export const volunteerApi = {
 
   getPostDetail: async (postId: number): Promise<PostDetailResponse> => {
     try {
-      const response = await axiosInstance.get(`/post/${postId}`);
+      const response = await axiosInstance.get(`/posts/${postId}`);
       return response.data.payload;
     } catch (error: any) {
       console.error('📌 getPostDetail 에러:', error.response?.data || error.message);
@@ -35,7 +35,7 @@ export const volunteerApi = {
 
   getPostTeams: async (postId: number): Promise<PostTeamsResponse> => {
     try {
-      const response = await axiosInstance.get(`/post/${postId}/teams`);
+      const response = await axiosInstance.get(`/posts/${postId}/teams`);
       return response.data.payload;
     } catch (error: any) {
       console.error('📌 getPostTeams 에러:', error.response?.data || error.message);
@@ -45,7 +45,7 @@ export const volunteerApi = {
 
   applyToTeam: async (postId: number, teamNumber: number): Promise<void> => {
     try {
-      await axiosInstance.post(`/post/${postId}/teams/${teamNumber}/apply`);
+      await axiosInstance.post(`/posts/${postId}/teams/${teamNumber}/apply`);
     } catch (error: any) {
       console.error('📌 applyToTeam 에러:', error.response?.data || error.message);
       throw error;
@@ -60,7 +60,7 @@ export const volunteerParticipantApi = {
     endTime?: string;
   }): Promise<any[]> => {
     try {
-      const res = await axiosInstance.get('/volunteer-participants/my', { params });
+      const res = await axiosInstance.get('/participants/my', { params });
       return res.data.payload;
     } catch (error: any) {
       console.error('📌 getMyParticipations 에러:', error.response?.data || error.message);
@@ -70,7 +70,7 @@ export const volunteerParticipantApi = {
 
   cancelParticipation: async (participantId: number): Promise<void> => {
     try {
-      await axiosInstance.patch(`/volunteer-participants/${participantId}`, {
+      await axiosInstance.patch(`/participants/${participantId}`, {
         status: 'CANCELLED',
       });
     } catch (error: any) {
