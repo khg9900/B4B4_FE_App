@@ -3,7 +3,7 @@ sdk.dir=C:\\Users\\YOUR_USERNAME\\AppData\\Local\\Android\\Sdk
 
 # Base URL of your backend API
 BASE_URL=https://example.com/api
-# Example: BASE_URL=http://192.168.45.41:8080/api
+# Example: BASE_URL=http://192.168.25.177:8080/api
 
 # Kakao REST API Key
 KAKAO_REST_API_KEY=YOUR_KAKAO_KEY_HERE
