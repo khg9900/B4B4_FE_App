@@ -22,7 +22,6 @@ class LocationWebSocketClient(var url: String) {
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(ws: WebSocket, response: Response) {
                 connected = true
-                Logger.d("LocationWS", "✅ Connected")
             }
 
             override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {

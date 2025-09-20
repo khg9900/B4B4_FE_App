@@ -5,7 +5,7 @@ import android.os.Build
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.disasteraidplatform.service.ForegroundLocationService // ✅ 단일 서비스만 import
+import com.disasteraidplatform.service.ForegroundLocationService
 
 class IntentLauncherModule(private val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 

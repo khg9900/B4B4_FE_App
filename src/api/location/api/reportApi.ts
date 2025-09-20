@@ -1,3 +1,4 @@
+// src/api/location/api/reportApi.ts
 import axiosInstance from '../../global/api/axiosInstance';
 import type { DisasterDto } from '../types/Map';
 
@@ -5,12 +6,11 @@ export const reportApi = {
   async getNearbyDisasters(
     latitude: number,
     longitude: number,
-    radiusMeter: number = 1000,
-    secondsAgo: number = 3600
+    radiusMeter: number
   ): Promise<DisasterDto[]> {
     try {
       const res = await axiosInstance.get('/reports/map', {
-        params: { latitude, longitude, radiusMeter, secondsAgo },
+        params: { latitude, longitude, radiusMeter},
       });
       return res.data.payload;
     } catch (error: any) {

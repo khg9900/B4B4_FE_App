@@ -17,7 +17,6 @@ class LocationCacheModule(reactContext: ReactApplicationContext) : ReactContextB
                 putDouble("latitude", location.latitude)
                 putDouble("longitude", location.longitude)
             }
-            Logger.d("LocationCacheModule", "getCachedLocation 호출, 위치 반환: $location")
             promise.resolve(map)
         } else {
             Logger.w("LocationCacheModule", "getCachedLocation 호출, 캐시된 위치 없음")
@@ -27,7 +26,6 @@ class LocationCacheModule(reactContext: ReactApplicationContext) : ReactContextB
 
     @ReactMethod
     fun saveCachedLocation(latitude: Double, longitude: Double) {
-        Logger.d("LocationCacheModule", "saveCachedLocation 호출: lat=$latitude, lon=$longitude")
         LocationCache.save(LocationData(latitude, longitude))
     }
 }

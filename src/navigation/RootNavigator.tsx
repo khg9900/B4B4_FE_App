@@ -29,7 +29,7 @@ export type RootStackParamList = {
   Dashboard: undefined;
   Alert: undefined;
   MainScreen: undefined;
-  UserParticipation: undefined;
+  UserParticipation: { highlightParticipantId?: number };
   VolunteerPostDetail: { postId: number };
 };
 

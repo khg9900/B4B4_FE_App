@@ -6,6 +6,8 @@ const INTENT_LAUNCHER_MODULE = NativeModules.IntentLauncher;
 const LOCATION_CACHE_MODULE = NativeModules.LocationCache;
 const TRACKING_EVENT_NAME = 'tracking';
 
+type Location = { latitude: number; longitude: number };
+
 export function useCurrentLocation() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
@@ -20,14 +22,9 @@ export function useCurrentLocation() {
     }
 
     let isMounted = true;
-    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutId: NodeJS.Timeout;
 
-    const handleTracking = async (event: any) => {
-      if (!isMounted) return;
-
-      const { latitude: lat, longitude: lng } = event ?? {};
-      if (typeof lat !== 'number' || typeof lng !== 'number') return;
-
+    const updateLocation = async ({ latitude: lat, longitude: lng }: Location) => {
       setLatitude(lat);
       setLongitude(lng);
 
@@ -41,52 +38,36 @@ export function useCurrentLocation() {
         console.warn('fetchRegionCode 실패', e);
       }
 
-      setLoading(false);
-      if (timeoutId) clearTimeout(timeoutId);
+      if (isMounted) setLoading(false);
+    };
+
+    const handleTracking = (event: Location) => {
+      if (!event?.latitude || !event?.longitude) return;
+      updateLocation(event);
     };
 
     const eventEmitter = new NativeEventEmitter(INTENT_LAUNCHER_MODULE);
     const subscription = eventEmitter.addListener(TRACKING_EVENT_NAME, handleTracking);
 
     const fetchCachedLocation = async () => {
-      if (!LOCATION_CACHE_MODULE?.getCachedLocation) {
-        setLoading(false);
-        return;
-      }
-
+      if (!LOCATION_CACHE_MODULE?.getCachedLocation) return setLoading(false);
       try {
-        const cached = await LOCATION_CACHE_MODULE.getCachedLocation();
-        if (cached && typeof cached.latitude === 'number' && typeof cached.longitude === 'number') {
-          setLatitude(cached.latitude);
-          setLongitude(cached.longitude);
-
-          try {
-            const region = await fetchRegionCode(cached.latitude, cached.longitude);
-            if (isMounted) {
-              setProvince(region.province);
-              setCity(region.city);
-            }
-          } catch (e) {
-            console.warn('fetchRegionCode 실패', e);
-          }
-        }
+        const cached: Location | null = await LOCATION_CACHE_MODULE.getCachedLocation();
+        if (cached?.latitude && cached?.longitude) updateLocation(cached);
+        else setLoading(false);
       } catch (e) {
         console.warn('캐시 위치 불러오기 실패', e);
-      } finally {
         setLoading(false);
       }
     };
 
-    timeoutId = setTimeout(() => {
-      if (isMounted && loading) setLoading(false);
-    }, 10000);
-
     fetchCachedLocation();
+    timeoutId = setTimeout(() => isMounted && setLoading(false), 2000);
 
     return () => {
       isMounted = false;
       subscription.remove();
-      if (timeoutId) clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
     };
   }, []);
 

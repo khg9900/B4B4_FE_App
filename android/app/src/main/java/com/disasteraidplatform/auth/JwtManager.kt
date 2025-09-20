@@ -88,11 +88,9 @@ object JwtManager {
 
                 if (!newAccess.isNullOrEmpty() && !newRefresh.isNullOrEmpty()) {
                     saveToken(newAccess, newRefresh)
-                    android.util.Log.d("JwtManager", "Token refreshed successfully: access=$newAccess, refresh=$newRefresh")
                 }
                 newAccess
             } else {
-                android.util.Log.d("JwtManager", "Refresh token failed, code=${resp.code}")
                 null
             }
         } catch (e: Exception) {

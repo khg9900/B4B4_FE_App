@@ -23,9 +23,9 @@ class MainApplication : Application(), ReactApplication {
     object : DefaultReactNativeHost(this) {
       override fun getPackages(): List<ReactPackage> {
         return PackageList(this).packages.toMutableList().apply {
-          add(JwtPackage())                     // ✅ JWT Native Module
-          add(IntentLauncherPackage())          // ✅ ForegroundService 제어 Module
-          add(LocationCachePackage())           // ✅ 위치 캐시 Module
+          add(JwtPackage())                     
+          add(IntentLauncherPackage())         
+          add(LocationCachePackage())           
         }
       }
 
