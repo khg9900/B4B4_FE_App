@@ -118,6 +118,5 @@ export const styles = StyleSheet.create({
   fontWeight: '600',
   color: '#007AFF',
   marginTop: 12,
-  textAlign: 'center',
 },
 });

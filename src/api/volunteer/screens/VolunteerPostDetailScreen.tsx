@@ -29,6 +29,29 @@ interface Team {
   currentCount: number;
 }
 
+const formatTimeHM = (timeStr: string) => {
+  if (!timeStr) return '';
+  const [hh, mm] = timeStr.split(':');
+  return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}`;
+};
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+// ISO 문자열에서 HH:mm만 추출
+export function formatTimeHHmm(isoString: string): string {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
 const VolunteerPostDetailScreen = () => {
   const route = useRoute<RouteProp<{ PostDetail: { postId: number } }, 'PostDetail'>>();
   const { postId } = route.params;
@@ -53,7 +76,7 @@ const VolunteerPostDetailScreen = () => {
 
   const fetchTeams = async () => {
     try {
-      const res = await axiosInstance.get(`/post/${postId}/teams`);
+      const res = await axiosInstance.get(`/posts/${postId}/teams`);
       setTeams(res.data.payload.teams);
     } catch (err) {
       console.error('팀 정보 조회 실패:', err);
@@ -105,6 +128,38 @@ const VolunteerPostDetailScreen = () => {
         <Text style={styles.title}>{postDetail.title}</Text>
         <Text style={styles.category}>{PostCategoryMap[postDetail.category]}</Text>
 
+        <Text style={[styles.label, { marginTop: 16 }]}>📄 세부 내용</Text>
+        <Text style={styles.value}>{postDetail.content}</Text>
+
+        <Text style={[styles.label, { marginTop: 16 }]}>📢 모집 일정</Text>
+        <Text style={styles.value}>
+          {formatDate(postDetail.recruitmentStartDate)} ~{' '} {formatDate(postDetail.recruitmentEndDate)}
+        </Text>
+
+        <Text style={[styles.label, { marginTop: 16 }]}>📆 봉사 일정</Text>
+        <Text style={styles.value}>
+          {formatDate(postDetail.volunteerDate)} {formatTimeHM(postDetail.volunteerStartTime)} ~{' '}
+          {formatTimeHM(postDetail.volunteerEndTime)}
+        </Text>
+
+        <Text style={[styles.label, { marginTop: 16 }]}>📌 장소</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.value}>
+            {postDetail.location.province} {postDetail.location.city}{' '} {postDetail.location.placeName}
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              Clipboard.setString(
+                `${postDetail.location.province} ${postDetail.location.city} ${postDetail.location.placeName}`
+              );
+              Alert.alert('복사됨', '주소가 클립보드에 복사되었습니다.');
+            }}
+            style={styles.copyButton}
+          >
+            <Text style={styles.copyButtonText}>📋</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* 지도는 항상 보이게 */}
         <VolunteerMap
           lat={postDetail.location.latitude}
@@ -114,40 +169,19 @@ const VolunteerPostDetailScreen = () => {
         {/* 상세보기 토글 */}
         <TouchableOpacity onPress={() => setExpanded(!expanded)}>
           <Text style={styles.toggleBtn}>
-            {expanded ? '▲ 접기' : '▼ 상세보기'}
+            {expanded ? '▲ 접기' : '▼ 출석 정책'}
           </Text>
         </TouchableOpacity>
 
         {/* 펼쳐지는 내용 */}
         {expanded && (
           <>
-            <Text style={[styles.label, { marginTop: 16 }]}>📄 내용</Text>
-            <Text style={styles.value}>{postDetail.content}</Text>
-
-            <Text style={[styles.label, { marginTop: 16 }]}>🕒 봉사 일정</Text>
+            <Text style={[styles.label, { marginTop: 16 }]}>🕑 출석 시간</Text>
             <Text style={styles.value}>
-              {postDetail.volunteerDate} {postDetail.volunteerStartTime} ~{' '}
-              {postDetail.volunteerEndTime}
+              {formatTimeHHmm(postDetail.attendancePolicy.checkinStart)} ~ {formatTimeHHmm(postDetail.attendancePolicy.checkinEnd)}
             </Text>
-
-            <Text style={[styles.label, { marginTop: 16 }]}>🏠 장소</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.value}>
-                {postDetail.location.province} {postDetail.location.city}{' '}
-                {postDetail.location.placeName}
-              </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  Clipboard.setString(
-                    `${postDetail.location.province} ${postDetail.location.city} ${postDetail.location.placeName}`
-                  );
-                  Alert.alert('복사됨', '주소가 클립보드에 복사되었습니다.');
-                }}
-                style={styles.copyButton}
-              >
-                <Text style={styles.copyButtonText}>📋</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.label, { marginTop: 16 }]}>📡 출석 인정 반경</Text>
+            <Text style={styles.value}>{postDetail.attendancePolicy.allowedRadiusM} m</Text>
           </>
         )}
       </View>

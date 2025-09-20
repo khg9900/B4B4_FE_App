@@ -37,16 +37,19 @@ export interface SliceResponse<T> {
   last: boolean;
 }
 
-// 게시글 상세
+// 게시글 상세 (백엔드 기준)
 export interface PostDetailResponse {
   title: string;
   content: string;
   category: 'RECRUITMENT' | 'SUPPORT';
   totalCapacity: number;
-  teamSize: number;
-  volunteerDate: string; // yyyy-MM-dd
-  volunteerStartTime: string; // ISO 8601
-  volunteerEndTime: string;   // ISO 8601
+  volunteerDate: string;
+  volunteerStartTime: string;
+  volunteerEndTime: string;
+  recruitmentStartDate: string;
+  recruitmentEndDate: string;
+  status: 'OPEN' | 'CLOSED' | 'CANCELLED';
+
   location: {
     placeName: string;
     latitude: number;
@@ -54,11 +57,11 @@ export interface PostDetailResponse {
     province: string;
     city: string;
   };
+
   attendancePolicy: {
     checkinStart: string;
     checkinEnd: string;
     allowedRadiusM: number;
-    minStayMinutes: number;
   };
 }
 

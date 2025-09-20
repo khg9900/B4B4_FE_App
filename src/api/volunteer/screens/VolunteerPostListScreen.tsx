@@ -17,6 +17,8 @@ const VolunteerPostListScreen = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
   const [province, setProvince] = useState<string | null>(null);
   const [city, setCity] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'OPEN' | 'CLOSED' | 'COMPLETED' | null>(null);
@@ -59,6 +61,15 @@ const VolunteerPostListScreen = () => {
       console.error('게시글 조회 실패', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchPosts(0, true); // 0페이지부터 다시 불러오면서 reset = true
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -140,6 +151,8 @@ const VolunteerPostListScreen = () => {
         ListFooterComponent={loading ? <ActivityIndicator style={{ marginVertical: 16 }} /> : null}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
+        refreshing={refreshing}       // Pull-to-Refresh 상태
+        onRefresh={onRefresh}         // 새로고침 시 호출
       />
     </View>
   );
