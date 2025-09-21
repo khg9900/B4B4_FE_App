@@ -3,7 +3,12 @@ import { View, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import axiosInstance from '../../global/api/axiosInstance';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {stopForegroundService } from '../../location/hooks/startLocationService';
+import { stopForegroundService } from '../../location/hooks/startLocationService';
+
+// 에러 출력
+const logError = (label: string, error: any) => {
+  console.error(`${label}:`, error?.response?.data ?? error?.message ?? error);
+};
 
 export default function MyActivitiesScreen() {
   const navigation = useNavigation();
@@ -19,8 +24,8 @@ export default function MyActivitiesScreen() {
         index: 0,
         routes: [{ name: 'Login' as never }],
       });
-    } catch (error) {
-      console.error('로그아웃 실패:', error);
+    } catch (error: any) {
+      logError('로그아웃 실패', error);
       Alert.alert('오류', '로그아웃 중 문제가 발생했습니다.');
     }
   };
@@ -48,7 +53,6 @@ export default function MyActivitiesScreen() {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -69,9 +73,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-    logoutbutton: {
+  logoutbutton: {
     position: 'relative',
-    top : '25%',
+    top: '25%',
     width: '30%',
     paddingVertical: 15,
     marginVertical: 10,
@@ -80,9 +84,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 2,
   },
-    logoutbuttonText: {
+  logoutbuttonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'white'
-  }
+    color: 'white',
+  },
 });

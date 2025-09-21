@@ -1,4 +1,3 @@
-// JwtService.ts
 import { NativeModules } from 'react-native';
 const { JwtModule } = NativeModules;
 

@@ -32,6 +32,11 @@ interface DecodedToken {
 
 const { JwtModule } = NativeModules;
 
+// 에러 출력
+const logError = (label: string, error: any) => {
+  console.error(`${label}:`, error?.response?.data ?? error?.message ?? error);
+};
+
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [form, setForm] = useState<LoginRequestDto>({ email: '', password: '' });
@@ -52,12 +57,10 @@ const LoginScreen = () => {
           const decoded: DecodedToken = jwtDecode(accessToken);
           const isExpired = decoded.exp * 1000 <= Date.now();
           if (isExpired) {
-            console.log('자동로그인: accessToken 만료 → 중단');
             await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
             return;
           }
-        } catch (e) {
-          console.log('토큰 디코드 실패:', e);
+        } catch {
           await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
           return;
         }
@@ -76,7 +79,7 @@ const LoginScreen = () => {
 
         navigation.navigate('MainScreen' as never);
       } catch (e) {
-        console.log('자동 로그인 실패:', e);
+        logError('자동 로그인 실패', e);
       } finally {
         authState.isAutoLoggingIn = false;
       }
@@ -100,8 +103,7 @@ const LoginScreen = () => {
       if (permissionGranted) {
         const fcmToken = await getFcmToken();
         if (fcmToken) {
-          const success = await sendDeviceInfoToServer(fcmToken);
-          if (!success) console.warn('[FCM] 서버 전송 실패');
+          await sendDeviceInfoToServer(fcmToken);
         }
       }
 
@@ -115,7 +117,7 @@ const LoginScreen = () => {
       else navigation.navigate('MainScreen' as never);
     } catch (error: any) {
       const serverError = error.response?.data;
-      console.error("❌ 로그인 실패:", serverError || error.message || JSON.stringify(error));
+      logError('로그인 실패', error);
 
       showErrorAlert(
         serverError?.code as ErrorCode,

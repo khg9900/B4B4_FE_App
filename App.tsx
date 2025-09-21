@@ -8,38 +8,45 @@ import { requestPushPermission } from './src/api/alert/fcm/fcmPermissions';
 import { getFcmToken } from './src/api/alert/fcm/fcmTokenManager';
 import { displayLocalNotification } from './src/api/alert/utils/showLocalNotification';
 import { requestLocationPermission } from './src/api/global/utils/PermissionUtil';
-import { navigationRef } from './src/navigation/AppNavigation'; 
+import { navigationRef } from './src/navigation/AppNavigation';
 
+// 릴리스에서 에러만 출력
+const logError = (label: string, error: any) => {
+  if (!__DEV__) {
+    console.error(`${label}:`, error?.message ?? error);
+  }
+};
 
 const App = () => {
   useEffect(() => {
     const initFCM = async () => {
-      const granted = await requestPushPermission();
-      const location = await requestLocationPermission();
-      if (!granted) {
-        console.warn('❌ FCM 권한 거부됨');
-        return;
-      }
+      try {
+        const granted = await requestPushPermission();
+        const location = await requestLocationPermission();
+        if (!granted) {
+          return;
+        }
+        if (!location) {
+          Alert.alert('위치 권한이 필요합니다. 앱을 종료합니다.');
+          return;
+        }
 
-      if (!location) {
-        console.warn('❌ 위치 권한 거부됨');
-        Alert.alert('위치 권한이 필요합니다. 앱을 종료합니다.');
-        return;
+        await getFcmToken(); 
+      } catch (e) {
+        logError('initFCM 실패', e);
       }
-
-      const token = await getFcmToken();
-      if (token) console.log('📱 FCM 토큰:', token);
     };
 
     const unsubscribe = messaging().onMessage(async remoteMessage => {
-      await displayLocalNotification(remoteMessage);
+      try {
+        await displayLocalNotification(remoteMessage);
+      } catch (e) {
+        logError('로컬 알림 표시 실패', e);
+      }
     });
 
     initFCM();
-
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
   return (
