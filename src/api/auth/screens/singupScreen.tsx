@@ -12,6 +12,11 @@ import type { SignUpRequestDto } from '../types/User';
 import { useNavigation } from '@react-navigation/native';
 import { showServerErrorAlert} from '../../global/utils/showErrorAlert';
 
+// 에러 출력
+const logError = (label: string, error: any) => {
+  console.error(`${label}:`, error?.response?.data ?? error?.message ?? error);
+};
+
 const SignUpScreen = () => {
   const navigation = useNavigation();
 
@@ -30,7 +35,7 @@ const SignUpScreen = () => {
       navigation.navigate('Login' as never);
     } catch (error: any) {
       const serverError = error.response?.data;
-      console.error("❌ 회원가입 실패:", serverError || error.message || JSON.stringify(error));
+        logError('회원가입 실패', error);
       showServerErrorAlert(serverError);
     }
   };
@@ -86,7 +91,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     marginBottom: 12,
-    color: '#000', // 입력 글씨 검은색
+    color: '#000',
   },
   button: {
     backgroundColor: '#f26522',
@@ -96,7 +101,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     marginTop: 10,
-    height: 53, // 로그인 버튼과 동일 크기
+    height: 53,
   },
   buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });

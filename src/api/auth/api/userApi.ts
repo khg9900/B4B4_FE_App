@@ -1,6 +1,11 @@
 import axiosInstance, { clearTokens, saveTokens } from '../../global/api/axiosInstance';
 import type { SignUpRequestDto, LoginRequestDto } from '../types/User';
-import {navigate}  from '../../../navigation/AppNavigation';
+import { navigate } from '../../../navigation/AppNavigation';
+
+// 에러 출력
+const logError = (label: string, error: any) => {
+  console.error(`${label}:`, error?.response?.data ?? error?.message ?? error);
+};
 
 export const userApi = {
   // 회원가입
@@ -12,7 +17,7 @@ export const userApi = {
       const response = await axiosInstance.post('/auth/signup', data);
       return response.data;
     } catch (error: any) {
-      console.error('📌 signUp 에러:', error.response?.data || error.message);
+      logError('signUp 에러', error);
       throw error;
     }
   },
@@ -38,7 +43,7 @@ export const userApi = {
 
       return payload; // { accessToken, refreshToken }
     } catch (error: any) {
-      console.error('📌 login 에러:', error.response?.data || error.message);
+      logError('login 에러', error);
       throw error;
     }
   },
@@ -49,7 +54,7 @@ export const userApi = {
       const response = await axiosInstance.get('/user/me');
       return response.data;
     } catch (error: any) {
-      console.error('📌 fetchMyInfo 에러:', error.response?.data || error.message);
+      logError('fetchMyInfo 에러', error);
       throw error;
     }
   },
@@ -62,7 +67,7 @@ export const userApi = {
       delete axiosInstance.defaults.headers.Authorization;
       navigate('Login');
     } catch (error: any) {
-      console.error('📌 logout 에러:', error.message);
+      logError('logout 에러', error);
       throw error;
     }
   },

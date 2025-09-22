@@ -22,13 +22,18 @@ const isAuthExcluded = (url?: string) => {
   return paths.some((path) => url.endsWith(path));
 };
 
+// 공통 에러 로거
+const logError = (label: string, error?: any) => {
+  console.error(`❗ ${label}:`, error?.response?.data ?? error?.message ?? error ?? '');
+};
+
 // NativeModule에서 accessToken 읽기
 const getNativeToken = async (): Promise<string | null> => {
   try {
     const token = await JwtModule.getToken();
     return token ?? null;
   } catch (e) {
-    console.warn("NativeModule에서 토큰 가져오기 실패", e);
+    logError("NativeModule 토큰 조회 실패", e);
     return null;
   }
 };
@@ -38,7 +43,7 @@ const clearTokens = async () => {
   try {
     await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
   } catch (e) {
-    console.warn("토큰 삭제 실패", e);
+    logError("토큰 삭제 실패", e);
   }
 };
 
@@ -55,20 +60,20 @@ const saveTokens = async (accessToken: string, refreshToken?: string) => {
     }
     await JwtModule.setToken(accessToken, refreshToken ?? "");
   } catch (e) {
-    console.warn("토큰 저장 실패", e);
+    logError("토큰 저장 실패", e);
   }
 };
 
 /** Request interceptor: 토큰 첨부 */
 axiosInstance.interceptors.request.use(async (config) => {
   if (isAuthExcluded(config.url)) {
-    if (config.headers) delete config.headers.Authorization;
+    if (config.headers) delete (config.headers as any).Authorization;
     return config;
   }
 
   const token = await getNativeToken();
   if (!token) {
-    console.warn("토큰 없음 → 로그인 화면으로 이동");
+    logError("AUTH_NO_TOKEN");
     await clearTokens();
     await stopForegroundService();
     navigate("Login");
@@ -90,11 +95,11 @@ axiosInstance.interceptors.response.use(
 
     if (err.response?.status === 401 && !originalRequest.__isRetryRequest) {
       if (authState.isAutoLoggingIn) {
-        console.warn('401 발생(자동로그인 중) → 리다이렉트 억제');
-        return Promise.reject(err); // 자동로그인일 땐 화면 이동 X
+        logError('401 (자동로그인 중)', err);
+        return Promise.reject(err);
       }
 
-      console.warn("401 발생 → 토큰 만료, 로그인 화면으로 이동");
+      logError("401 토큰 만료", err);
       await clearTokens();
       await stopForegroundService();
       navigate("Login");

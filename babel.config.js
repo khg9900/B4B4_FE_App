@@ -6,4 +6,9 @@ module.exports = {
       path: '.env',
     }],
   ],
+  env: {
+    production: {
+      plugins: [['transform-remove-console', { exclude: ['error'] }]],
+    },
+  },
 };

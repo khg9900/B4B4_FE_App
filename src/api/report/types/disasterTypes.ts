@@ -1,5 +1,3 @@
-// constants/disasterTypes.ts
-
 export enum DisasterType {
   EARTHQUAKE = 'EARTHQUAKE',
   FLOOD = 'FLOOD',
@@ -11,7 +9,7 @@ export enum DisasterType {
   BUILDING_COLLAPSE = 'BUILDING_COLLAPSE'
 }
 
-// 재난 유형별 한글 이름 맵
+// 재난 유형별 한글 이름
 export const disasterTypeNames: Record<DisasterType, string> = {
   [DisasterType.EARTHQUAKE]: '지진',
   [DisasterType.FLOOD]: '홍수',
