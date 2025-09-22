@@ -43,7 +43,6 @@ const formatDate = (dateStr: string) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-// ISO 문자열에서 HH:mm만 추출
 export function formatTimeHHmm(isoString: string): string {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -157,20 +156,18 @@ const VolunteerPostDetailScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* 지도는 항상 보이게 */}
         <VolunteerMap
           lat={postDetail.location.latitude}
           lng={postDetail.location.longitude}
         />
 
-        {/* 상세보기 토글 */}
+        {/* 출석 정책 토글 */}
         <TouchableOpacity onPress={() => setExpanded(!expanded)}>
           <Text style={styles.toggleBtn}>
             {expanded ? '▲ 접기' : '▼ 출석 정책'}
           </Text>
         </TouchableOpacity>
 
-        {/* 펼쳐지는 내용 */}
         {expanded && (
           <>
             <Text style={[styles.label, { marginTop: 16 }]}>🕑 출석 시간</Text>

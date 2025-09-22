@@ -15,7 +15,6 @@ const axiosInstance = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// 인증 제외 URL
 const isAuthExcluded = (url?: string) => {
   if (!url) return false;
   const paths = ["/auth/login", "/auth/reissue", "/auth/signup"];
@@ -38,7 +37,6 @@ const getNativeToken = async (): Promise<string | null> => {
   }
 };
 
-// 토큰 삭제 (AsyncStorage)
 const clearTokens = async () => {
   try {
     await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
@@ -47,7 +45,6 @@ const clearTokens = async () => {
   }
 };
 
-// 토큰 저장 (Native + AsyncStorage)
 const saveTokens = async (accessToken: string, refreshToken?: string) => {
   try {
     if (refreshToken) {
@@ -64,7 +61,6 @@ const saveTokens = async (accessToken: string, refreshToken?: string) => {
   }
 };
 
-/** Request interceptor: 토큰 첨부 */
 axiosInstance.interceptors.request.use(async (config) => {
   if (isAuthExcluded(config.url)) {
     if (config.headers) delete (config.headers as any).Authorization;
@@ -85,7 +81,6 @@ axiosInstance.interceptors.request.use(async (config) => {
   return config;
 });
 
-/** Response interceptor: 401 발생 시 로그인 처리 */
 axiosInstance.interceptors.response.use(
   (res) => res,
   async (err: AxiosError) => {

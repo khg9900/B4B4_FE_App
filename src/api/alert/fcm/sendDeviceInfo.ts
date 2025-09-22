@@ -3,7 +3,7 @@ import { getDeviceInfo } from './fcmConfig';
 import axiosInstance from '../../global/api/axiosInstance';
 
 export async function sendDeviceInfoToServer(token: string): Promise<boolean> {
-  const isEmulator = await DeviceInfo.isEmulator(); // ✅ 에뮬레이터 여부 확인
+  const isEmulator = await DeviceInfo.isEmulator();
 
   if (isEmulator) {
     console.warn('[FCM] 에뮬레이터에서는 푸시 알림을 사용할 수 없습니다.');

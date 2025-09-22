@@ -18,7 +18,7 @@ export const shelterApi = {
         '📌 getNearbyShelters 에러:',
         error.response?.data || error.message
       );
-      throw error; // 호출하는 쪽에서 추가 처리 가능
+      throw error;
     }
   },
 };

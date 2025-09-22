@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, StyleSheet,
   Alert, TouchableOpacity, ActivityIndicator,
-  PermissionsAndroid, Platform, Image,
-  ScrollView, KeyboardAvoidingView,
+  Platform, ScrollView, KeyboardAvoidingView,
 } from 'react-native';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import { createReport } from '../api/report';
@@ -29,7 +28,6 @@ const logError = (label: string, error: any) => {
 const joinLabel = (...parts: (string | null | undefined)[]) =>
   parts.filter(p => p && p.trim() && p.trim().toLowerCase() !== 'null').join(' ');
 
-// 전송용: 값 없으면 null
 const norm = (v?: string | null) =>
   v && v.trim() && v.trim().toLowerCase() !== 'null' ? v.trim() : null;
 
@@ -41,6 +39,7 @@ const ReportScreen = () => {
   const [video, setVideo] = useState<Asset | null>(null);
 
   const { latitude, longitude, province, city, loading } = useCurrentLocation();
+
   const insets = useSafeAreaInsets();
   const tabBarHeight = TABBAR_HEIGHT;
 

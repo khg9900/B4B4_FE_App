@@ -1,7 +1,6 @@
 import axiosInstance from '../../global/api/axiosInstance.ts';
 import { ApiResponse, ReportResponse } from '../types/api.ts';
 
-// 에러 출력
 const logError = (label: string, error: any) => {
   console.error(`${label}:`, error?.response?.data ?? error?.message ?? error);
 };
@@ -22,7 +21,7 @@ export const createReport = async (payload: {
   imageUrl?: string;
   videoUrl?: string;
   province: string;
-  city: string;
+  city: string | null;
   latitude: number;
   longitude: number;
   image?: { uri: string; type: string; fileName: string };

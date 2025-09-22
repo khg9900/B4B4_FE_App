@@ -6,7 +6,7 @@ import styles from '../styles/UserParticipationStyles';
 interface Props {
   item: VolunteerParticipationResponse;
   onCancel: (id: number) => void;
-  onPress?: () => void; // 카드 클릭 핸들러
+  onPress?: () => void;
 }
 
 const getStatusLabel = (status: VolunteerParticipationResponse['status']) => {
