@@ -2,8 +2,8 @@
 import { KAKAO_REST_API_KEY } from '@env';
 
 export type Region = {
-  province: string;    // 시/도
-  city: string | null; // 시/군/구, 세종시는 null 처리
+  province: string;   
+  city: string | null;
 };
 
 export default async function fetchRegionCode(latitude: number, longitude: number): Promise<Region> {
@@ -48,6 +48,6 @@ function parseProvinceCity(region1: string, region2: string, region3: string): R
 
   return {
     province: region1,
-    city: region2, // region2까지만 사용
+    city: region2,
   };
 }

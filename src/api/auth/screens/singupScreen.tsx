@@ -10,7 +10,7 @@ import {
 import { userApi } from '../api/userApi';
 import type { SignUpRequestDto } from '../types/User';
 import { useNavigation } from '@react-navigation/native';
-import { showErrorAlert, ErrorCode } from '../../global/utils/showErrorAlert';
+import { showServerErrorAlert} from '../../global/utils/showErrorAlert';
 
 const SignUpScreen = () => {
   const navigation = useNavigation();
@@ -31,11 +31,7 @@ const SignUpScreen = () => {
     } catch (error: any) {
       const serverError = error.response?.data;
       console.error("❌ 회원가입 실패:", serverError || error.message || JSON.stringify(error));
-
-      showErrorAlert(
-        serverError?.code as ErrorCode,
-        serverError?.payload
-      );
+      showServerErrorAlert(serverError);
     }
   };
 

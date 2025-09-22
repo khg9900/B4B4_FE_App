@@ -27,7 +27,6 @@ class LocationProvider(context: Context) {
             override fun onLocationResult(result: LocationResult) {
                 result.lastLocation?.let { loc ->
                     val locationData = LocationData(loc.latitude, loc.longitude)
-                    Logger.d("LocationProvider", "위치 수신: ${loc.latitude}, ${loc.longitude}")
                     LocationCache.save(locationData)
                 }
             }
