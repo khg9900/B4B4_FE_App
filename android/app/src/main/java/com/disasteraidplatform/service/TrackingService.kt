@@ -42,14 +42,12 @@ class TrackingService : Service() {
                 if (location != null) {
                     val lat = location.latitude
                     val lng = location.longitude
-                    Logger.d("TrackingService", "새 위치 수신: 위도=$lat, 경도=$lng")
                     LocationCache.set(lat, lng)
                 }
             }
         }
 
         startLocationUpdates()
-        Logger.d("TrackingService", "TrackingService 시작됨")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
@@ -57,7 +55,6 @@ class TrackingService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         stopLocationUpdates()
-        Logger.d("TrackingService", "TrackingService 종료됨")
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

@@ -10,7 +10,7 @@ import {
 import { userApi } from '../api/userApi';
 import type { SignUpRequestDto } from '../types/User';
 import { useNavigation } from '@react-navigation/native';
-import { showErrorAlert, ErrorCode } from '../../global/utils/showErrorAlert';
+import { showServerErrorAlert} from '../../global/utils/showErrorAlert';
 
 // 에러 출력
 const logError = (label: string, error: any) => {
@@ -34,13 +34,9 @@ const SignUpScreen = () => {
       Alert.alert('회원가입 성공');
       navigation.navigate('Login' as never);
     } catch (error: any) {
-      const serverError = error?.response?.data;
-      logError('회원가입 실패', error);
-
-      showErrorAlert(
-        serverError?.code as ErrorCode,
-        serverError?.payload
-      );
+      const serverError = error.response?.data;
+        logError('회원가입 실패', error);
+      showServerErrorAlert(serverError);
     }
   };
 

@@ -4,68 +4,76 @@ import com.disasteraidplatform.util.Logger
 import kotlinx.serialization.json.*
 import okhttp3.*
 
-class TrackingWebSocketClient(var url: String) {
+class TrackingWebSocketClient(private var url: String) {
 
     sealed class TrackingEvent {
-        data class Ready(val volunteerId: String) : TrackingEvent()
-        object Started : TrackingEvent()
-        object Ended : TrackingEvent()
+        data class Ready(val volunteerId: String, val postId: Long, val teamId: Long, val state: String) : TrackingEvent()
+        data class Started(val volunteerId: String, val postId: Long, val teamId: Long) : TrackingEvent()
+        data class Ended(val volunteerId: String, val postId: Long, val teamId: Long) : TrackingEvent()
         object Unknown : TrackingEvent()
     }
 
     var volunteerId: String? = null
+    var lastReadyData: TrackingEvent.Ready? = null
     var onEvent: ((TrackingEvent) -> Unit)? = null
-
+    var onRawMessage: ((String) -> Unit)? = null
     private var webSocket: WebSocket? = null
     private val client = OkHttpClient()
-    private var connected = false
-
-    // ✅ 토큰 필드 추가
     var token: String? = null
         private set
+    private var connected = false
 
     fun connect() {
         val request = Request.Builder().url(url).build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
-            override fun onOpen(ws: WebSocket, response: Response) {
-                connected = true
-                Logger.d("TrackingWS", "✅ Connected")
-            }
+            override fun onOpen(ws: WebSocket, response: Response) { connected = true }
 
             override fun onMessage(ws: WebSocket, text: String) {
                 try {
                     val msg = Json.parseToJsonElement(text).jsonObject
                     val type = msg["type"]?.jsonPrimitive?.content
-                    val data = msg["data"]
+                    val data = msg["data"]?.jsonObject
 
                     when (type) {
                         "READY" -> {
-                            volunteerId = data?.jsonObject?.get("participantUserId")?.jsonPrimitive?.content
-                            onEvent?.invoke(TrackingEvent.Ready(volunteerId ?: ""))
+                            val vid = data?.get("participantUserId")?.jsonPrimitive?.content ?: ""
+                            val postId = data?.get("postId")?.jsonPrimitive?.long ?: 0L
+                            val teamId = data?.get("teamId")?.jsonPrimitive?.long ?: 0L
+                            val state = data?.get("state")?.jsonPrimitive?.content ?: "READY"
+
+                            lastReadyData = TrackingEvent.Ready(vid, postId, teamId, state)
+                            volunteerId = vid
+                            onEvent?.invoke(lastReadyData!!)
                         }
-                        "STARTED" -> onEvent?.invoke(TrackingEvent.Started)
-                        "ENDED" -> onEvent?.invoke(TrackingEvent.Ended)
+                        "STARTED" -> {
+                            lastReadyData?.let {
+                                onEvent?.invoke(TrackingEvent.Started(it.volunteerId, it.postId, it.teamId))
+                            }
+                        }
+                        "ENDED" -> {
+                            lastReadyData?.let {
+                                onEvent?.invoke(TrackingEvent.Ended(it.volunteerId, it.postId, it.teamId))
+                            }
+                            lastReadyData = null
+                        }
                         else -> onEvent?.invoke(TrackingEvent.Unknown)
                     }
+
+                    // 서버 notify 메시지도 전달
+                    onRawMessage?.invoke(text)
+
                 } catch (e: Exception) {
                     Logger.w("TrackingWS", "Parse error", e)
                 }
             }
 
-            override fun onClosed(ws: WebSocket, code: Int, reason: String) {
-                connected = false
-            }
-
-            override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
-                connected = false
-                Logger.e("TrackingWS", "WebSocket 실패", t)
-            }
+            override fun onClosed(ws: WebSocket, code: Int, reason: String) { connected = false }
+            override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) { connected = false }
         })
     }
 
     fun isConnected(): Boolean = connected
 
-    // ✅ 토큰 갱신 시 재연결
     fun reconnect(newToken: String) {
         token = newToken
         url = url.substringBefore("?token=") + "?token=$newToken"

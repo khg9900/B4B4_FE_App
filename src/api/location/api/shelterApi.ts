@@ -1,3 +1,4 @@
+// src/api/location/api/reportApi.ts
 import axiosInstance from '../../global/api/axiosInstance';
 import type { ShelterDto } from '../types/Map';
 
@@ -5,7 +6,7 @@ export const shelterApi = {
   async getNearbyShelters(
     latitude: number,
     longitude: number,
-    radiusMeter: number = 3000
+    radiusMeter: number
   ): Promise<ShelterDto[]> {
     try {
       const res = await axiosInstance.get('/shelters', {

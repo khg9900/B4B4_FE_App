@@ -92,7 +92,7 @@ object BackendApi {
         method: String = "POST",
         body: RequestBody? = null
     ): Response {
-        // 1️⃣ 원래 요청 (access token 포함)
+        // 원래 요청 (access token 포함)
         var request = buildRequest(url, method, body, includeAuth = true)
         var response = client.newCall(request).execute()
         Log.d(TAG, "Sync Request: ${request.method} $url -> ${response.code}")
@@ -106,7 +106,7 @@ object BackendApi {
                 return response
             }
 
-            // 2️⃣ 재발급 요청은 access token 헤더 없이
+            // 재발급 요청은 access token 헤더 없이
             val reissueBody = createJsonRequestBody(mapOf("refreshToken" to refreshToken))
             val reissueRequest = buildRequest(
                 url = "/auth/reissue",
@@ -133,7 +133,7 @@ object BackendApi {
                         JwtManager.saveToken(newAccessToken, newRefreshToken)
                         Log.d(TAG, "Token refreshed successfully")
 
-                        // 3️⃣ 새 토큰으로 원래 요청 재시도
+                        // 새 토큰으로 원래 요청 재시도
                         request = buildRequest(url, method, body, includeAuth = true)
                         response = client.newCall(request).execute()
                     }

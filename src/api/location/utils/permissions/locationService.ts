@@ -1,4 +1,4 @@
-// src/api/locationService.ts (이미 만든 예시)
+// src/api/locationService.ts
 import { NativeModules, Platform, PermissionsAndroid, Alert } from 'react-native';
 
 const { IntentLauncher } = NativeModules;

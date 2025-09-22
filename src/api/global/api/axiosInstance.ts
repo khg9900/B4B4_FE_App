@@ -3,10 +3,10 @@ import { NativeModules } from "react-native";
 import { navigate } from "../../../navigation/AppNavigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authState } from '../../global/utils/authState';
-import { stopForegroundService } from "../../location/hooks/startLocationService";
+import {stopForegroundService} from "../../location/hooks/startLocationService";
+import { BASE_URL } from "@env";
 
-// ✅ 환경별 baseURL
-const baseURL = 'http://192.168.1.100:8080/api';
+const baseURL = BASE_URL;
 const { JwtModule } = NativeModules;
 
 const axiosInstance = axios.create({
@@ -38,10 +38,9 @@ const getNativeToken = async (): Promise<string | null> => {
   }
 };
 
-// 토큰 삭제 (Native + AsyncStorage)
+// 토큰 삭제 (AsyncStorage)
 const clearTokens = async () => {
   try {
-    await JwtModule.clearTokens();
     await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
   } catch (e) {
     logError("토큰 삭제 실패", e);

@@ -31,22 +31,48 @@ const App = () => {
           return;
         }
 
-        await getFcmToken(); 
+        await getFcmToken();
       } catch (e) {
         logError('initFCM 실패', e);
       }
     };
 
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
-      try {
-        await displayLocalNotification(remoteMessage);
-      } catch (e) {
-        logError('로컬 알림 표시 실패', e);
+    const unsubscribeForeground = messaging().onMessage(async remoteMessage => {
+      await displayLocalNotification(remoteMessage);
+    });
+
+    // 앱이 백그라운드 상태에서 Notification 클릭
+    const unsubscribeBackground = messaging().onNotificationOpenedApp(remoteMessage => {
+      const highlightParticipantId = remoteMessage.data?.highlightParticipantId
+        ? Number(remoteMessage.data.highlightParticipantId)
+        : null;
+
+      if (highlightParticipantId) {
+        navigationRef.current?.navigate('UserParticipation', { highlightParticipantId});
       }
     });
 
+    // 앱이 종료 상태에서 Notification 클릭
+    messaging()
+      .getInitialNotification()
+      .then(remoteMessage => {
+        const highlightParticipantId = remoteMessage?.data?.highlightParticipantId
+          ? Number(remoteMessage.data.highlightParticipantId)
+          : null;
+
+        if (highlightParticipantId) {
+          setTimeout(() => {
+            navigationRef.current?.navigate('UserParticipation', { highlightParticipantId });
+          }, 500); // navigation 준비 대기
+        }
+      });
+
     initFCM();
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribeForeground();
+      unsubscribeBackground();
+    };
   }, []);
 
   return (

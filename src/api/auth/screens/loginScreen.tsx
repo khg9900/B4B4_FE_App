@@ -20,7 +20,7 @@ import { startAllServices } from '../../location/hooks/startLocationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosInstance from '../../global/api/axiosInstance';
 import { authState } from '../../global/utils/authState';
-import { showErrorAlert, ErrorCode } from '../../global/utils/showErrorAlert';
+import { showServerErrorAlert} from '../../global/utils/showErrorAlert';
 
 interface DecodedToken {
   id: number;
@@ -119,10 +119,7 @@ const LoginScreen = () => {
       const serverError = error.response?.data;
       logError('로그인 실패', error);
 
-      showErrorAlert(
-        serverError?.code as ErrorCode,
-        serverError?.payload
-      );
+      showServerErrorAlert(serverError);
     } finally {
       setLoading(false);
     }
