@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, StyleSheet,
   Alert, TouchableOpacity, ActivityIndicator,
-  PermissionsAndroid, Platform, Image,
-  ScrollView, KeyboardAvoidingView,
+  Platform, ScrollView, KeyboardAvoidingView,
 } from 'react-native';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import { createReport } from '../api/report';
@@ -13,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const B4_ORANGE = '#FF6B00';
 const B4_ORANGE_LIGHT = '#FFD4B3';
-const TABBAR_HEIGHT = 56; // 실제 탭바 높이에 맞게 조정
+const TABBAR_HEIGHT = 56;
 
 const disasterTypeNames = {
   EARTHQUAKE: '지진', FLOOD: '홍수', TYPHOON: '태풍',
@@ -21,11 +20,9 @@ const disasterTypeNames = {
   TERROR_ATTACK: '테러', BUILDING_COLLAPSE: '건물 붕괴'
 };
 
-// 표시용: null/'null'/빈칸 제거 후 합치기
 const joinLabel = (...parts: (string | null | undefined)[]) =>
   parts.filter(p => p && p.trim() && p.trim().toLowerCase() !== 'null').join(' ');
 
-// 전송용: 값 없으면 null
 const norm = (v?: string | null) =>
   v && v.trim() && v.trim().toLowerCase() !== 'null' ? v.trim() : null;
 
@@ -36,10 +33,8 @@ const ReportScreen = () => {
   const [image, setImage] = useState<Asset | null>(null);
   const [video, setVideo] = useState<Asset | null>(null);
 
-  // 위치
   const { latitude, longitude, province, city, loading } = useCurrentLocation();
 
-  // 안전 영역
   const insets = useSafeAreaInsets();
   const tabBarHeight = TABBAR_HEIGHT;
 
@@ -129,7 +124,7 @@ const ReportScreen = () => {
         style={styles.container}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingBottom: tabBarHeight + insets.bottom + -20, // 버튼이 탭바에 가리지 않도록 여유
+          paddingBottom: tabBarHeight + insets.bottom + -20,
         }}
       >
         <View style={styles.headerBar}>
@@ -251,7 +246,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     minHeight: 100,
-    maxHeight: 200,            // 무한 확장 방지
+    maxHeight: 200,
     backgroundColor: 'white',
   },
   charCount: { textAlign: 'right', fontSize: 12, color: '#888', marginBottom: 12, marginTop: 4 },

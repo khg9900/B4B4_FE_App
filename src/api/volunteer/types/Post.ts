@@ -1,8 +1,7 @@
-// 서버 DTO 기반 게시글 리스트 아이템
 export interface PostsResponse {
   id: number;
   title: string;
-  volunteerDate: string; // yyyy-MM-dd
+  volunteerDate: string;
   province?: string;
   city?: string;
   category: 'RECRUITMENT' | 'SUPPORT';
@@ -15,7 +14,7 @@ export interface PostsResponse {
 export interface PostsTotalResponse {
   id: number;
   title: string;
-  volunteerDate: string; // yyyy-MM-dd
+  volunteerDate: string;
   province?: string;
   city?: string;
   category: 'RECRUITMENT' | 'SUPPORT';
@@ -26,8 +25,6 @@ export interface PostsTotalResponse {
   status: 'OPEN' | 'CLOSED' | 'COMPLETED';
 }
 
-
-// Slice 구조
 export interface SliceResponse<T> {
   content: T[];
   pageable: {
@@ -37,7 +34,6 @@ export interface SliceResponse<T> {
   last: boolean;
 }
 
-// 게시글 상세 (백엔드 기준)
 export interface PostDetailResponse {
   title: string;
   content: string;
@@ -65,7 +61,6 @@ export interface PostDetailResponse {
   };
 }
 
-// 팀 관련
 export interface PostTeamsResponse {
   postId: number;
   teams: TeamStatus[];
@@ -78,12 +73,11 @@ export interface TeamStatus {
   currentCount: number;
 }
 
-// 필터 요청
 export interface PostFilterRequest {
   province?: string;
   city?: string;
   status?: 'OPEN' | 'CLOSED' | 'COMPLETED';
   category?: 'RECRUITMENT' | 'SUPPORT';
-  volunteerStartDate?: string; // yyyy-MM-dd
-  volunteerEndDate?: string;   // yyyy-MM-dd
+  volunteerStartDate?: string;
+  volunteerEndDate?: string;
 }

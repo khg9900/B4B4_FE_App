@@ -1,5 +1,4 @@
 // constants/disasterTypes.ts
-
 export enum DisasterType {
   EARTHQUAKE = 'EARTHQUAKE',
   FLOOD = 'FLOOD',
@@ -11,7 +10,6 @@ export enum DisasterType {
   BUILDING_COLLAPSE = 'BUILDING_COLLAPSE'
 }
 
-// 재난 유형별 한글 이름 맵
 export const disasterTypeNames: Record<DisasterType, string> = {
   [DisasterType.EARTHQUAKE]: '지진',
   [DisasterType.FLOOD]: '홍수',
@@ -23,6 +21,5 @@ export const disasterTypeNames: Record<DisasterType, string> = {
   [DisasterType.BUILDING_COLLAPSE]: '건물 붕괴'
 };
 
-// 공통 컬러 코드
 export const B4_ORANGE = '#FF6B00';
 export const B4_ORANGE_LIGHT = '#FFD4B3';

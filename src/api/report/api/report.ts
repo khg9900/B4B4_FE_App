@@ -8,7 +8,7 @@ export const getReports = async () => {
     return res.data.payload;
   } catch (error: any) {
     console.error('📌 getReports 에러:', error.response?.data || error.message);
-    throw error; // 호출한 쪽에서 추가 처리 가능
+    throw error;
   }
 };
 
@@ -18,7 +18,7 @@ export const createReport = async (payload: {
   imageUrl?: string;
   videoUrl?: string;
   province: string;
-  city: string;
+  city: string | null;
   latitude: number;
   longitude: number;
   image?: { uri: string; type: string; fileName: string };

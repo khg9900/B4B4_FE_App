@@ -79,7 +79,7 @@ const UserParticipationScreen = () => {
       Alert.alert('알림', '참가가 취소되었습니다.');
     } catch (error: any) {
       Alert.alert('오류', error.response?.data?.message || '참가 취소 중 문제가 발생했습니다.');
-      fetchMyParticipations(); // 롤백
+      fetchMyParticipations();
     }
   };
 
@@ -135,8 +135,8 @@ const UserParticipationScreen = () => {
           />
         )}
         contentContainerStyle={styles.listContainer}
-        refreshing={refreshing}       // Pull-to-Refresh 상태
-        onRefresh={onRefresh}         // 새로고침 시 호출
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       />
     </View>
   );

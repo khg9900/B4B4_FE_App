@@ -20,7 +20,6 @@ const KakaoMapView: React.FC<Props> = ({
   const webViewRef = useRef(null);
 
   const htmlContent = useMemo(() => {
-    // JSON으로 주입해 스크립트 내에서 처리
     const sheltersJS = JSON.stringify(
       (shelters ?? []).map(s => ({
         lat: s.latitude,

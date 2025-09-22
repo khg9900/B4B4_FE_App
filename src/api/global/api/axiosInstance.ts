@@ -5,8 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authState } from '../../global/utils/authState';
 import {stopForegroundService} from "../../location/hooks/startLocationService";
 
-// ✅ 환경별 baseURL
-const baseURL = 'http://192.168.0.12:8080/api';
+const baseURL = 'http://172.30.1.8:8080/api';
 const { JwtModule } = NativeModules;
 
 const axiosInstance = axios.create({
@@ -15,14 +14,12 @@ const axiosInstance = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// 인증 제외 URL
 const isAuthExcluded = (url?: string) => {
   if (!url) return false;
   const paths = ["/auth/login", "/auth/reissue", "/auth/signup"];
   return paths.some((path) => url.endsWith(path));
 };
 
-// NativeModule에서 accessToken 읽기
 const getNativeToken = async (): Promise<string | null> => {
   try {
     const token = await JwtModule.getToken();
@@ -33,7 +30,6 @@ const getNativeToken = async (): Promise<string | null> => {
   }
 };
 
-// 토큰 삭제 (Native + AsyncStorage)
 const clearTokens = async () => {
   try {
     await JwtModule.clearTokens();
@@ -43,7 +39,6 @@ const clearTokens = async () => {
   }
 };
 
-// 토큰 저장 (Native + AsyncStorage)
 const saveTokens = async (accessToken: string, refreshToken?: string) => {
   try {
     if (refreshToken) {
@@ -60,7 +55,6 @@ const saveTokens = async (accessToken: string, refreshToken?: string) => {
   }
 };
 
-/** Request interceptor: 토큰 첨부 */
 axiosInstance.interceptors.request.use(async (config) => {
   if (isAuthExcluded(config.url)) {
     if (config.headers) delete config.headers.Authorization;
@@ -81,7 +75,6 @@ axiosInstance.interceptors.request.use(async (config) => {
   return config;
 });
 
-/** Response interceptor: 401 발생 시 로그인 처리 */
 axiosInstance.interceptors.response.use(
   (res) => res,
   async (err: AxiosError) => {
@@ -92,7 +85,7 @@ axiosInstance.interceptors.response.use(
     if (err.response?.status === 401 && !originalRequest.__isRetryRequest) {
       if (authState.isAutoLoggingIn) {
         console.warn('401 발생(자동로그인 중) → 리다이렉트 억제');
-        return Promise.reject(err); // 자동로그인일 땐 화면 이동 X
+        return Promise.reject(err);
       }
 
       console.warn("401 발생 → 토큰 만료, 로그인 화면으로 이동");
