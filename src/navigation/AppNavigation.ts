@@ -1,4 +1,3 @@
-// src/navigation/AppNavigation.ts
 import { createNavigationContainerRef } from '@react-navigation/native';
 import type { RootStackParamList } from './RootNavigator';
 

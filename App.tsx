@@ -8,37 +8,70 @@ import { requestPushPermission } from './src/api/alert/fcm/fcmPermissions';
 import { getFcmToken } from './src/api/alert/fcm/fcmTokenManager';
 import { displayLocalNotification } from './src/api/alert/utils/showLocalNotification';
 import { requestLocationPermission } from './src/api/global/utils/PermissionUtil';
-import { navigationRef } from './src/navigation/AppNavigation'; 
+import { navigationRef } from './src/navigation/AppNavigation';
 
+// 릴리스에서 에러만 출력
+const logError = (label: string, error: any) => {
+  if (!__DEV__) {
+    console.error(`${label}:`, error?.message ?? error);
+  }
+};
 
 const App = () => {
   useEffect(() => {
     const initFCM = async () => {
-      const granted = await requestPushPermission();
-      const location = await requestLocationPermission();
-      if (!granted) {
-        console.warn('❌ FCM 권한 거부됨');
-        return;
-      }
+      try {
+        const granted = await requestPushPermission();
+        const location = await requestLocationPermission();
+        if (!granted) {
+          return;
+        }
+        if (!location) {
+          Alert.alert('위치 권한이 필요합니다. 앱을 종료합니다.');
+          return;
+        }
 
-      if (!location) {
-        console.warn('❌ 위치 권한 거부됨');
-        Alert.alert('위치 권한이 필요합니다. 앱을 종료합니다.');
-        return;
+        await getFcmToken();
+      } catch (e) {
+        logError('initFCM 실패', e);
       }
-
-      const token = await getFcmToken();
-      if (token) console.log('📱 FCM 토큰:', token);
     };
 
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
+    const unsubscribeForeground = messaging().onMessage(async remoteMessage => {
       await displayLocalNotification(remoteMessage);
     });
+
+    // 앱이 백그라운드 상태에서 Notification 클릭
+    const unsubscribeBackground = messaging().onNotificationOpenedApp(remoteMessage => {
+      const highlightParticipantId = remoteMessage.data?.highlightParticipantId
+        ? Number(remoteMessage.data.highlightParticipantId)
+        : null;
+
+      if (highlightParticipantId) {
+        navigationRef.current?.navigate('UserParticipation', { highlightParticipantId});
+      }
+    });
+
+    // 앱이 종료 상태에서 Notification 클릭
+    messaging()
+      .getInitialNotification()
+      .then(remoteMessage => {
+        const highlightParticipantId = remoteMessage?.data?.highlightParticipantId
+          ? Number(remoteMessage.data.highlightParticipantId)
+          : null;
+
+        if (highlightParticipantId) {
+          setTimeout(() => {
+            navigationRef.current?.navigate('UserParticipation', { highlightParticipantId });
+          }, 500); // navigation 준비 대기
+        }
+      });
 
     initFCM();
 
     return () => {
-      unsubscribe();
+      unsubscribeForeground();
+      unsubscribeBackground();
     };
   }, []);
 

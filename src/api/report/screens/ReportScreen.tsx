@@ -1,4 +1,3 @@
-// src/api/report/screens/ReportScreen.tsx
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, StyleSheet,
@@ -20,6 +19,12 @@ const disasterTypeNames = {
   TERROR_ATTACK: '테러', BUILDING_COLLAPSE: '건물 붕괴'
 };
 
+// 에러 출력
+const logError = (label: string, error: any) => {
+  console.error(`${label}:`, error?.response?.data ?? error?.message ?? error);
+};
+
+// 표시용: null/'null'/빈칸 제거 후 합치기
 const joinLabel = (...parts: (string | null | undefined)[]) =>
   parts.filter(p => p && p.trim() && p.trim().toLowerCase() !== 'null').join(' ');
 
@@ -52,7 +57,7 @@ const ReportScreen = () => {
         }
       }
     } catch (e) {
-      console.warn('미디어 선택 실패:', e);
+      logError('미디어 선택 실패', e);
     }
   };
 
@@ -98,7 +103,7 @@ const ReportScreen = () => {
       Alert.alert('신고 완료', `재난 유형: ${res.disasterType}`);
       resetForm();
     } catch (err) {
-      console.error('❌ 신고 실패:', err);
+      logError('신고 실패', err);
       Alert.alert('신고 실패', '서버 요청 중 문제가 발생했습니다.');
     } finally {
       setIsSubmitting(false);

@@ -15,7 +15,7 @@ import { volunteerApi } from '../api/VolunteerApi';
 import type { PostDetailResponse } from '../types/Post';
 import { styles } from '../styles/VolunteerPostDetailStyles.ts';
 import VolunteerMap from './VolunteerMap';
-import { ErrorCode, showErrorAlert } from '../../global/utils/showErrorAlert';
+import {showServerErrorAlert} from '../../global/utils/showErrorAlert';
 
 const PostCategoryMap: Record<string, string> = {
   RECRUITMENT: '봉사 활동 모집',
@@ -93,10 +93,7 @@ const VolunteerPostDetailScreen = () => {
       const serverError = err.response?.data;
       console.error('팀 참가 실패:', serverError || err.message || JSON.stringify(err));
 
-      showErrorAlert(
-        serverError?.code as ErrorCode,
-        serverError?.payload
-      );
+      showServerErrorAlert(serverError);
     }
   };
 

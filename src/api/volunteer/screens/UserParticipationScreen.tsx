@@ -1,14 +1,15 @@
 // src/screens/UserParticipationScreen.tsx
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, Alert } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../../navigation/types';
 import { volunteerParticipantApi } from '../api/VolunteerApi';
 import type { VolunteerParticipationResponse } from '../types/Participation';
 import styles from '../styles/UserParticipationStyles';
 import ParticipationCard from '../components/ParticipationCard';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../../navigation/types';
 import VolunteerPostFilter from '../components/VolunteerPostFilter';
+import { useAutoScroll } from '../hooks/useAutoScroll';
 
 const formatAsKSTISOString = (date: Date): string => {
   const kstOffset = 9 * 60;
@@ -38,6 +39,16 @@ const UserParticipationScreen = () => {
   const [showEndPicker, setShowEndPicker] = useState(false);
 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute();
+  const routeParams = route.params as { highlightParticipantId?: number } | undefined;
+  const highlightParticipantId = routeParams?.highlightParticipantId ?? null;
+
+
+  const { flatListRef } = useAutoScroll(
+    participations,
+    highlightParticipantId,
+    (item) => item.participantId
+  );
 
   useEffect(() => {
     fetchMyParticipations();
@@ -94,7 +105,6 @@ const UserParticipationScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* 공통 필터 + 체크인 상태 필터 */}
       <VolunteerPostFilter
         province={province}
         city={city}
@@ -123,8 +133,8 @@ const UserParticipationScreen = () => {
         resetFilters={resetFilters}
       />
 
-      {/* 참가 목록 */}
       <FlatList
+        ref={flatListRef}
         data={participations}
         keyExtractor={(item) => item.participantId.toString()}
         renderItem={({ item }) => (

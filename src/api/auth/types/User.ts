@@ -1,4 +1,4 @@
-// 역할 타입
+// 권한 타입
 export type UserRole = 'IND' | 'NGO' | 'GOV';
 
 // 회원가입 요청 DTO

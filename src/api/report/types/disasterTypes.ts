@@ -1,4 +1,3 @@
-// constants/disasterTypes.ts
 export enum DisasterType {
   EARTHQUAKE = 'EARTHQUAKE',
   FLOOD = 'FLOOD',
