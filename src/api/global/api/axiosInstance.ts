@@ -33,10 +33,9 @@ const getNativeToken = async (): Promise<string | null> => {
   }
 };
 
-// 토큰 삭제 (Native + AsyncStorage)
+// 토큰 삭제 (AsyncStorage)
 const clearTokens = async () => {
   try {
-    await JwtModule.clearTokens();
     await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
   } catch (e) {
     console.warn("토큰 삭제 실패", e);
