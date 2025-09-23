@@ -263,6 +263,7 @@ class ForegroundLocationService : Service() {
             .setContentTitle("Disaster Aid Platform")
             .setContentText("📍 $message")
             .setSmallIcon(R.drawable.b4b4)
+            .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.b4b4))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .build()
@@ -300,6 +301,7 @@ class ForegroundLocationService : Service() {
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.b4b4)
+            .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.b4b4))
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setStyle(messagingStyle)
