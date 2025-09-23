@@ -23,6 +23,7 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import android.graphics.BitmapFactory
 
 class ForegroundLocationService : Service() {
 
