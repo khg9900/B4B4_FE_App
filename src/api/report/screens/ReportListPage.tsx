@@ -32,6 +32,11 @@ const formatToLocalDate = (date: Date) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 };
 
+// 에러 출력
+const logError = (label: string, error: any) => {
+  console.error(`${label}:`, error?.response?.data ?? error?.message ?? error);
+};
+
 export default function ReportListPage() {
   const [reports, setReports] = useState<ReportResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +97,7 @@ export default function ReportListPage() {
         setLastId(undefined);
       }
     } catch (err: any) {
-      console.error(err);
+      logError('신고 목록 로드 실패', err);
       Alert.alert('오류', '신고 목록을 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
@@ -198,7 +203,6 @@ export default function ReportListPage() {
     </View>
   );
 
-  // 카드 내 미디어 섹션
   const MediaRow = ({ imageUrl, videoUrl }: { imageUrl?: string | null; videoUrl?: string | null }) => {
     if (!imageUrl && !videoUrl) return null;
 
@@ -210,6 +214,10 @@ export default function ReportListPage() {
               source={{ uri: imageUrl! }}
               style={styles.thumbImage}
               resizeMode="contain"
+              onError={(e) => {
+                logError('이미지 로드 실패', e?.nativeEvent ?? e);
+                Alert.alert('오류', '이미지를 불러올 수 없습니다.');
+              }}
             />
           </TouchableOpacity>
         ) : null}
@@ -222,7 +230,8 @@ export default function ReportListPage() {
                 const supported = await Linking.canOpenURL(videoUrl!);
                 if (supported) Linking.openURL(videoUrl!);
                 else Alert.alert('재생 불가', '이 링크를 열 수 없습니다.');
-              } catch {
+              } catch (e) {
+                logError('동영상 열기 실패', e);
                 Alert.alert('오류', '동영상을 열 수 없습니다.');
               }
             }}
@@ -270,7 +279,6 @@ export default function ReportListPage() {
         contentContainerStyle={styles.listContainer}
       />
 
-      {/* 이미지 원본 보기 모달 */}
       <Modal visible={!!previewUrl} transparent animationType="fade" onRequestClose={() => setPreviewUrl(null)}>
         <TouchableWithoutFeedback onPress={() => setPreviewUrl(null)}>
           <View style={styles.previewOverlay}>
@@ -281,7 +289,10 @@ export default function ReportListPage() {
                     source={{ uri: previewUrl }}
                     style={styles.previewImage}
                     resizeMode="contain"
-                    onError={() => Alert.alert('오류', '이미지를 불러올 수 없습니다.')}
+                    onError={(e) => {
+                      logError('이미지 프리뷰 로드 실패', e?.nativeEvent ?? e);
+                      Alert.alert('오류', '이미지를 불러올 수 없습니다.');
+                    }}
                   />
                 ) : null}
               </View>
@@ -316,7 +327,6 @@ const styles = StyleSheet.create({
   cardDate: { fontSize: 12, color: TEXT_MUTED },
   cardDesc: { fontSize: 13, marginTop: 8, color: '#374151' },
 
-  // 미디어
   mediaRow: { marginTop: 10, flexDirection: 'row', gap: 10 },
   thumbImage: {
     width: 120, height: 90,
@@ -341,7 +351,6 @@ const styles = StyleSheet.create({
   modalItem: { paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: BORDER },
   modalItemText: { fontSize: 14, color: TEXT_DARK },
 
-  // 원본 프리뷰
   previewOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'center', alignItems: 'center' },
   previewBox: {
     width: Math.floor(W * 0.92),

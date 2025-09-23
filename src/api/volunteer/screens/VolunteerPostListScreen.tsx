@@ -67,7 +67,7 @@ const VolunteerPostListScreen = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await fetchPosts(0, true); // 0페이지부터 다시 불러오면서 reset = true
+      await fetchPosts(0, true);
     } finally {
       setRefreshing(false);
     }
@@ -151,8 +151,8 @@ const VolunteerPostListScreen = () => {
         ListFooterComponent={loading ? <ActivityIndicator style={{ marginVertical: 16 }} /> : null}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
-        refreshing={refreshing}       // Pull-to-Refresh 상태
-        onRefresh={onRefresh}         // 새로고침 시 호출
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       />
     </View>
   );

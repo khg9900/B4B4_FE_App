@@ -1,4 +1,3 @@
-// src/api/report/types/api.ts
 export type ApiResponse<T> = {
     status: string;
     message: string;
@@ -14,9 +13,9 @@ export type ReportResponse = {
     videoUrl: string;
     status: string;
     province: string;
-    city: string;
+    city: string | null;
     locationLat: number;
     locationLng: number;
-    createdAt: string; // ISO date string
-    updatedAt: string; // ISO date string
+    createdAt: string;
+    updatedAt: string;
 };

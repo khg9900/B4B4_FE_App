@@ -27,7 +27,6 @@ export async function requestLocationPermission(): Promise<boolean> {
     console.log('✅ [Android] 위치 권한 허용됨');
   }
 
-  // iOS는 react-native-permissions 사용 필요 (필요 시 추가)
   return true;
 }
 

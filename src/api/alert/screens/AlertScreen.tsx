@@ -12,7 +12,6 @@ import {
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { useAlert } from '../hooks/useAlert';
 import { AlertItem } from '../components/AlertItem';
-import { Alert } from '../types/index';
 
 const AlertTab = ({ type }: { type: 'disaster' | 'volunteer' }) => {
   const { alerts, loading, refetch } = useAlert(type);

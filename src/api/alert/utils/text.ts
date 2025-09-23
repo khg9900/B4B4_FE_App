@@ -4,5 +4,5 @@ export const hasText = (s: string | null | undefined): s is string =>
 
 export const joinSpace = (...parts: (string | null | undefined)[]) =>
   parts
-    .filter(p => p && p.trim() && p.toLowerCase() !== 'null') // null, 빈칸, "null" 제거
+    .filter(p => p && p.trim() && p.toLowerCase() !== 'null')
     .join(' ');

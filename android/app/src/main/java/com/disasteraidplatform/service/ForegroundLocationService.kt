@@ -24,12 +24,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-
 class ForegroundLocationService : Service() {
 
     companion object {
         private const val CHANNEL_ID = "foreground_service_channel"
-        private const val NOTIFICATION_ID = 1
+        private const val FOREGROUND_NOTIFICATION_ID = 1
+        private const val VOLUNTEER_NOTIFICATION_ID = 1002
         private const val LOCATION_UPDATE_INTERVAL_MS = 10_000L
         private const val LOCATION_SEND_INTERVAL_MS = 60_000L
     }
@@ -44,11 +44,15 @@ class ForegroundLocationService : Service() {
 
     // 출석 메시지 누적
     private val volunteerMessages = mutableListOf<NotificationCompat.MessagingStyle.Message>()
+    private var isFirstVolunteerNotification = true
+
+    // 클릭 시 알림 초기화용 액션
+    private val ACTION_CLEAR_VOLUNTEER_NOTIFICATION = "com.disasteraidplatform.CLEAR_VOLUNTEER_NOTIFICATION"
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, buildForegroundNotification("서비스 시작"))
+        startForeground(FOREGROUND_NOTIFICATION_ID, buildForegroundNotification("서비스 시작"))
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationRequest = LocationRequest.Builder(
@@ -76,6 +80,16 @@ class ForegroundLocationService : Service() {
 
         startInitialLocation()
         startLocationUpdates()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        intent?.action?.let { action ->
+            if (action == ACTION_CLEAR_VOLUNTEER_NOTIFICATION) {
+                volunteerMessages.clear() // 누적 메시지 초기화
+                NotificationManagerCompat.from(this).cancel(VOLUNTEER_NOTIFICATION_ID) // 알림 제거
+            }
+        }
+        return super.onStartCommand(intent, flags, startId)
     }
 
     private fun startInitialLocation() {
@@ -138,6 +152,11 @@ class ForegroundLocationService : Service() {
         wsManager?.trackingWS?.onRawMessage = { rawJson ->
             handleWebSocketMessage(rawJson)
         }
+
+        // 서버 notify 메시지 처리
+        wsManager?.trackingWS?.onRawMessage = { rawJson ->
+            handleWebSocketMessage(rawJson)
+        }
     }
 
     private fun startSendingLoop() {
@@ -194,53 +213,35 @@ class ForegroundLocationService : Service() {
         val readyData = wsManager?.trackingWS?.lastReadyData
         when (event) {
             is TrackingWebSocketClient.TrackingEvent.Ready -> {
-                showVolunteerNotification(
-                    title = "출석 준비",
-                    content = "출석 준비가 시작되었습니다.",
-                    postId = event.postId,
-                    teamId = event.teamId,
-                    state = "READY"
-                )
+                showVolunteerNotification("출석 준비", "출석 준비가 시작되었습니다.")
             }
             is TrackingWebSocketClient.TrackingEvent.Started -> {
                 readyData?.let {
-                    showVolunteerNotification(
-                        title = "출석 시작",
-                        content = "출석이 시작되었습니다.",
-                        postId = it.postId,
-                        teamId = it.teamId,
-                        state = "STARTED"
-                    )
+                    showVolunteerNotification("출석 시작", "출석이 시작되었습니다.")
                 }
             }
             is TrackingWebSocketClient.TrackingEvent.Ended -> {
                 readyData?.let {
-                    showVolunteerNotification(
-                        title = "출석 종료",
-                        content = "출석이 종료되었습니다.",
-                        postId = it.postId,
-                        teamId = it.teamId,
-                        state = "ENDED"
-                    )
+                    showVolunteerNotification("출석 종료", "출석이 종료되었습니다.")
                 }
             }
             else -> {}
         }
     }
 
-    // 서버 notify 메시지 처리 (attendance_status)
     private fun handleWebSocketMessage(json: String) {
         try {
+            Logger.d("WebSocket", "수신 메시지: $json") // 수신 로그
+
             val msg = Json.parseToJsonElement(json).jsonObject
             val type = msg["type"]?.jsonPrimitive?.content
             val data = msg["data"]?.jsonObject
 
             if (type == "attendance_status") {
-                val isPresent = data?.get("isPresent")?.jsonPrimitive?.content?.toBoolean() ?: false
+                val isPresent = data?.get("Present")?.jsonPrimitive?.content?.toBoolean() ?: false
                 showVolunteerNotification(
-                    title = if (isPresent) "출석 시작" else "출석 상태 변경",
-                    content = "출석이 ${if (isPresent) "시작" else "변경"}되었습니다.",
-                    state = if (isPresent) "STARTED" else "UPDATED"
+                    if (isPresent) "출석 시작" else "출석 상태 변경",
+                    "출석이 ${if (isPresent) "시작" else "변경"}되었습니다."
                 )
             }
         } catch (e: Exception) {
@@ -273,37 +274,22 @@ class ForegroundLocationService : Service() {
 
     private fun updateForegroundNotification(message: String) {
         NotificationManagerCompat.from(this)
-            .notify(NOTIFICATION_ID, buildForegroundNotification(message))
+            .notify(FOREGROUND_NOTIFICATION_ID, buildForegroundNotification(message))
     }
 
-    private fun showVolunteerNotification(
-        title: String,
-        content: String = "",
-        postId: Long? = null,
-        teamId: Long? = null,
-        state: String? = null
-    ) {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("highlightPostId", postId)
-            putExtra("teamId", teamId)
-            putExtra("state", state)
+    private fun showVolunteerNotification(title: String, content: String) {
+        val intent = Intent(this, ForegroundLocationService::class.java).apply {
+            action = ACTION_CLEAR_VOLUNTEER_NOTIFICATION
         }
 
-        val pendingIntent = PendingIntent.getActivity(
+        val pendingIntent = PendingIntent.getService(
             this,
-            ((System.currentTimeMillis() % Int.MAX_VALUE).toInt()),
+            0,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.b4b4)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-
-        // MessagingStyle 누적
+        // 메시지 누적
         volunteerMessages.add(
             NotificationCompat.MessagingStyle.Message(
                 content.ifEmpty { title },
@@ -311,15 +297,31 @@ class ForegroundLocationService : Service() {
                 "봉사 출석"
             )
         )
-        if (volunteerMessages.size > 5) volunteerMessages.removeAt(0)
+        if (volunteerMessages.size > 10) volunteerMessages.removeAt(0)
 
         val messagingStyle = NotificationCompat.MessagingStyle("시스템")
-            .setConversationTitle(title)
+            .setConversationTitle("봉사 출석 알림")
         volunteerMessages.forEach { messagingStyle.addMessage(it) }
-        notificationBuilder.setStyle(messagingStyle)
+
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.b4b4)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setStyle(messagingStyle)
+            .setContentTitle("봉사 출석 알림")
+            .setContentText(content.ifEmpty { title })
+
+        if (isFirstVolunteerNotification) {
+            builder.setPriority(NotificationCompat.PRIORITY_HIGH)
+            isFirstVolunteerNotification = false
+        } else {
+            builder.setPriority(NotificationCompat.PRIORITY_LOW)
+            builder.setOnlyAlertOnce(true)
+            builder.setSilent(true)
+        }
 
         NotificationManagerCompat.from(this)
-            .notify(NOTIFICATION_ID, notificationBuilder.build())
+            .notify(VOLUNTEER_NOTIFICATION_ID, builder.build())
     }
 
     override fun onDestroy() {
