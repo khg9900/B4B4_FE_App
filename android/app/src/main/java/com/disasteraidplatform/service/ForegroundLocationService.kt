@@ -296,7 +296,7 @@ class ForegroundLocationService : Service() {
             NotificationCompat.MessagingStyle.Message(
                 content.ifEmpty { title },
                 System.currentTimeMillis(),
-                "봉사 출석"
+                "봉사 활동 출석"
             )
         )
         if (volunteerMessages.size > 10) volunteerMessages.removeAt(0)
